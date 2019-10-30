@@ -1,0 +1,30 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "ArcVehicles",
+  "Description": "",
+  "Category": "Other",
+  "CreatedBy": "Garrett Fleenor & Puny Human",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "ArcVehicles",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins":
+  [
+    {
+      "Name": "ArcCore",
+      "Enabled": true
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "ArcVehiclesExtra",
+  "Description": "Extras for the ArcVehicles plugin, including default implementations",
+  "Category": "Other",
+  "CreatedBy": "Garrett Fleenor & Puny Human",
+  "CreatedByURL": "",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "ArcVehiclesExtra",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "ArcCore",
+      "Enabled": true
+    },
+    {
+      "Name": "ArcVehicles",
+      "Enabled": true
+    }
+  ]
+}
