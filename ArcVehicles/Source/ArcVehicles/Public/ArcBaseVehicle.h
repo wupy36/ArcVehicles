@@ -3,11 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "ArcVehiclePawn.h"
 #include "ArcBaseVehicle.generated.h"
 
+class UArcVehicleSeatConfig;
+
 UCLASS()
-class ARCVEHICLES_API AArcBaseVehicle : public APawn
+class ARCVEHICLES_API AArcBaseVehicle : public AArcVehiclePawn
 {
 	GENERATED_BODY()
 
@@ -25,5 +27,17 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
+
+public:
+
+	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config", Instanced)
+	UArcVehicleSeatConfig* DriverSeatConfig;
+
+	//Additional Seat Configurations for this vehicle
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config", Instanced)
+	TArray<UArcVehicleSeatConfig*> AdditionalSeatConfigs;
 
 };

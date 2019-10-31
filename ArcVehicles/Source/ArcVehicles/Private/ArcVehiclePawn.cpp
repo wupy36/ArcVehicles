@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ArcBaseVehicle.h"
+#include "ArcVehiclePawn.h"
 
 // Sets default values
-AArcBaseVehicle::AArcBaseVehicle()
+AArcVehiclePawn::AArcVehiclePawn()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
@@ -12,28 +12,23 @@ AArcBaseVehicle::AArcBaseVehicle()
 }
 
 // Called when the game starts or when spawned
-void AArcBaseVehicle::BeginPlay()
+void AArcVehiclePawn::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
 // Called every frame
-void AArcBaseVehicle::Tick(float DeltaTime)
+void AArcVehiclePawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
 // Called to bind functionality to input
-void AArcBaseVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AArcVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-}
-
-UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig()
-{
-	return DriverSeatConfig;
 }
 
