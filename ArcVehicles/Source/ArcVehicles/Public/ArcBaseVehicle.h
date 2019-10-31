@@ -29,7 +29,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
-
+	
 public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
