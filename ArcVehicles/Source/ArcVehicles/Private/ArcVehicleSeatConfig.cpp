@@ -3,27 +3,24 @@
 
 #include "ArcVehicleSeatConfig.h"
 
-#if WITH_EDITOR
-#include "Kismet2/ComponentEditorUtils.h"
-#endif
+
 
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 {
 	
 }
 
-void UArcVehicleSeatConfig::PostInitProperties()
+class AArcBaseVehicle* UArcVehicleSeatConfig::GetVehicleOwner() const
 {
-	Super::PostInitProperties();
-	
-	//For now, restrict the component search to the owner actor.
-	//We'll need do some fanagling to get it working with seat pawns
+	return Cast<AArcBaseVehicle>(GetOuter());
+}
 
-#if WITH_EDITOR
-	if (AActor* OuterActor = Cast<AActor>(GetOuter()))
-	{
-		AttachComponent = FComponentEditorUtils::MakeComponentReference(OuterActor, OuterActor->GetRootComponent());
-	}
-#endif
-	
+void UArcVehicleSeatConfig::SetupSeatAttachment_Implementation()
+{
+
+}
+
+void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(AActor* PlayerActor)
+{
+
 }

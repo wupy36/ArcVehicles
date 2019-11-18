@@ -3,15 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Pawn.h"
+#include "ArcVehiclePawn.h"
 #include "ArcVehicleSeat.generated.h"
 
+
+
 UCLASS(Abstract)
-class ARCVEHICLES_API AArcVehicleSeat : public APawn
+class ARCVEHICLES_API AArcVehicleSeat : public AArcVehiclePawn
 {
 	GENERATED_BODY()
 
 public:
+	friend class AArcBaseVehicle;
+
 	// Sets default values for this pawn's properties
 	AArcVehicleSeat();
 
@@ -26,6 +30,11 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	
+	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
+
+protected:
+
+	UPROPERTY()
+	UArcVehicleSeatConfig* SeatConfig;
 
 };

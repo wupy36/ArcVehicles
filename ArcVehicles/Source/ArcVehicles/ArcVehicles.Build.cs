@@ -14,6 +14,7 @@ public class ArcVehicles : ModuleRules
 			new string[]
 			{
 				"Core",
+                "ArcCore",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);

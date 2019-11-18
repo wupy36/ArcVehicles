@@ -2,6 +2,11 @@
 
 
 #include "ArcBaseVehicle.h"
+#include "ArcVehicleSeatConfig.h"
+
+FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
+FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
+
 
 // Sets default values
 AArcBaseVehicle::AArcBaseVehicle()
@@ -15,6 +20,11 @@ AArcBaseVehicle::AArcBaseVehicle()
 void AArcBaseVehicle::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		SetupVehicleSeats();
+	}
 	
 }
 
@@ -35,5 +45,32 @@ void AArcBaseVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig()
 {
 	return DriverSeatConfig;
+}
+
+void AArcBaseVehicle::SetupVehicleSeats()
+{
+	TArray<UArcVehicleSeatConfig*> Seats;
+	GetAllSeats(Seats);
+
+	for (UArcVehicleSeatConfig* SeatConfig : Seats)
+	{
+		SetupSeat(SeatConfig);
+	}
+}
+
+void AArcBaseVehicle::SetupSeat_Implementation(UArcVehicleSeatConfig* SeatConfig)
+{
+	if (IsValid(SeatConfig))
+	{
+		SeatConfig->SetupSeatAttachment();
+	}
+}
+
+void AArcBaseVehicle::GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats)
+{
+	Seats.Reset(AdditionalSeatConfigs.Num() + 1);
+
+	Seats.Add(DriverSeatConfig);
+	Seats.Append(AdditionalSeatConfigs);
 }
 

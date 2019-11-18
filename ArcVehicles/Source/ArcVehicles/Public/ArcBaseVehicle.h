@@ -8,6 +8,24 @@
 
 class UArcVehicleSeatConfig;
 
+USTRUCT()
+struct ARCVEHICLES_API FArcVehicleSeatChangeEvent
+{
+	GENERATED_USTRUCT_BODY()
+public:
+	const int32 ANY_SEAT;
+	const int32 NO_SEAT;
+
+	int32 FromSeat;
+	int32 ToSeat;
+
+	bool bFindEmptySeat;
+
+	UPROPERTY()
+	APlayerState* Player;
+
+};
+
 UCLASS()
 class ARCVEHICLES_API AArcBaseVehicle : public AArcVehiclePawn
 {
@@ -30,6 +48,15 @@ public:
 
 	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
 	
+
+	virtual void SetupVehicleSeats();
+
+	UFUNCTION(BlueprintNativeEvent)
+	void SetupSeat(UArcVehicleSeatConfig* SeatConfig);
+	virtual void SetupSeat_Implementation(UArcVehicleSeatConfig* SeatConfig);
+
+	virtual void GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats);
+
 public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
@@ -39,5 +66,11 @@ public:
 	//Additional Seat Configurations for this vehicle
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config", Instanced)
 	TArray<UArcVehicleSeatConfig*> AdditionalSeatConfigs;
+
+
+
+private:
+
+	TArray<FArcVehicleSeatChangeEvent> SeatChangeQueue;
 
 };

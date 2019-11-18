@@ -32,3 +32,8 @@ void AArcVehicleSeat::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+UArcVehicleSeatConfig* AArcVehicleSeat::GetSeatConfig()
+{
+	return SeatConfig;
+}
+

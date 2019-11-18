@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "ArcCoreTypes.h"
 #include "ArcVehicleSeatConfig.generated.h"
 
 
@@ -18,12 +19,48 @@ public:
 
 	UArcVehicleSeatConfig();
 
-	UPROPERTY(EditDefaultsOnly, Category = "Attach", meta = (UseComponentPicker = true,AllowAnyActor=true, AllowedClasses="StaticMeshComponent,SkeletalMeshComponent"))
-		FComponentReference AttachComponent;
+	//Where the seat is attached to on the parent vehicle
+	UPROPERTY(EditDefaultsOnly, Category = "Attach")
+	FArcOwnerAttachmentReference AttachSeatToComponent;
 
-	UPROPERTY(BlueprintReadWrite, Category = "Attach")
-		FName AttachSocketName;
+	UFUNCTION(BlueprintPure)
+	class AArcBaseVehicle* GetVehicleOwner() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void SetupSeatAttachment();
+	virtual void SetupSeatAttachment_Implementation();
+};
+
+UCLASS()
+class ARCVEHICLES_API UArcVehicleSeatConfig_PlayerAttachment : public UArcVehicleSeatConfig
+{
+	GENERATED_BODY()
+public:
 	
-	virtual void PostInitProperties() override;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
+	bool bPlayerVisible;
 
+	//TODO: Animation Stuff
+
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void AttachPlayerToSeat(AActor* PlayerActor);
+	virtual void AttachPlayerToSeat_Implementation(AActor* PlayerActor);
+};
+
+
+UCLASS()
+class ARCVEHICLES_API UArcVehicleSeatConfig_SeatPawn : public UArcVehicleSeatConfig_PlayerAttachment
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Seat Pawn")
+	TSubclassOf<class AArcVehicleSeat> SeatPawnClass;
+
+	/** Property to point to the template child actor for details panel purposes */
+	//UPROPERTY(VisibleDefaultsOnly, DuplicateTransient, Category = "Seat Pawn", meta = (ShowInnerProperties))
+	//AArcVehicleSeat* SeatPawnTemplate;
+		
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
+	FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
 };
