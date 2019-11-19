@@ -19,7 +19,7 @@ public:
 	int32 FromSeat;
 	int32 ToSeat;
 
-	bool bFindEmptySeat;
+	bool bFindEmptySeatOnFail;
 
 	UPROPERTY()
 	APlayerState* Player;

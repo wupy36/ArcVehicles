@@ -5,7 +5,7 @@
 #include "ArcVehicleSeatConfig.h"
 
 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
-FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
+FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MIN;
 
 
 // Sets default values
