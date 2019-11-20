@@ -13,8 +13,8 @@ struct ARCVEHICLES_API FArcVehicleSeatChangeEvent
 {
 	GENERATED_USTRUCT_BODY()
 public:
-	const int32 ANY_SEAT;
-	const int32 NO_SEAT;
+	static int32 ANY_SEAT;
+	static int32 NO_SEAT;
 
 	int32 FromSeat;
 	int32 ToSeat;
