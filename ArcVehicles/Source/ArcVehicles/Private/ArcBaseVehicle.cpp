@@ -3,9 +3,10 @@
 
 #include "ArcBaseVehicle.h"
 #include "ArcVehicleSeatConfig.h"
+#include "GameFramework/PlayerState.h"
 
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
-int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MIN;
+int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
 
 
 // Sets default values
@@ -72,5 +73,155 @@ void AArcBaseVehicle::GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats)
 
 	Seats.Add(DriverSeatConfig);
 	Seats.Append(AdditionalSeatConfigs);
+}
+
+bool AArcBaseVehicle::CanProcessSeatChange(const FArcVehicleSeatChangeEvent& SeatChange)
+{
+	return true;
+}
+
+UArcVehicleSeatConfig* AArcBaseVehicle::FindSeatContainingPlayer(APlayerState* Player)
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	for (UArcVehicleSeatConfig* Config : AllSeats)
+	{
+		if (Config->PlayerInSeat == Player)
+		{
+			return Config;
+		}
+	}
+
+	return nullptr;
+}
+
+void AArcBaseVehicle::ProcessSeatChangeQueue()
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	while (SeatChangeQueue.Num() > 0)
+	{
+		FArcVehicleSeatChangeEvent SeatChangeEvent = SeatChangeQueue.Pop(false);
+		
+		//If we don't have a player, then we have a problem.
+		//We can safely just ignore in shipping, but we should let the developer
+		//know something went wrong
+		if (ensure(!IsValid(SeatChangeEvent.Player)))
+		{
+			continue;
+		}
+
+		//PROCESSING SEAT CHANGES
+		//Seat Changes are processed in a sequential way.  Firstly, we find the actual seats that the player wants to go to.
+		//The seats can be nullptr.  There are fail conditions if seats are nullptr and there is some intent
+		//Then we determine intent (eg: FromSeat ANY, ToSeat NOSEAT means the player just wants out of the vehicle)
+		//This helps us process the change.  There are two possible actions that can be taken based on the player's intent
+		//  First Action is "PUT PLAYER INTO SEAT".  This takes a player (regardless of where they are) and places them directly in the seat.  
+		//  Second is "REMOVE PLAYER FROM VEHICLE".  This takes a player (regardless of where they are) and removes them from the seat that they are in.
+		//If a player is moving from one seat to another, we take the first action and then clear out their FromSeat reference pointer.  
+		
+
+		if (CanProcessSeatChange(SeatChangeEvent))
+		{
+			//Get the seat objects from this seat change event.  
+			//The Event contains Intents, and ToSeat and FromSeat are the actual possible situations.
+			UArcVehicleSeatConfig* ToSeat = nullptr;
+			UArcVehicleSeatConfig* FromSeat = nullptr;
+			if (SeatChangeEvent.FromSeat >= 0)
+			{
+				//Find the seat that the player is coming from
+				if (AllSeats.IsValidIndex(SeatChangeEvent.FromSeat))
+				{
+					FromSeat = AllSeats[SeatChangeEvent.FromSeat];
+
+					check(IsValid(FromSeat)); //Seat Must be valid (bad data?)
+					
+					//If the player isn't the player in the seat, we have a bad data situation
+					checkf(FromSeat->PlayerInSeat == SeatChangeEvent.Player, 
+						TEXT("AArcBaseVehicle::ProcessSeatChangeQueue: Got a Seat Change Event where a different player is in FromSeat.  Player changing seats: %s Player In FromSeat: %s"),
+					*SeatChangeEvent.Player->GetPlayerName(), FromSeat->PlayerInSeat ? *FromSeat->PlayerInSeat->GetPlayerName() : TEXT("NULLPTR"));
+				}
+				else if (SeatChangeEvent.FromSeat == FArcVehicleSeatChangeEvent::ANY_SEAT)
+				{
+					//If we are coming from any seat, that doesn't make a whole lot of sense.  So we are going to assume the caller doesn't know
+					// where the player is.  So, let's find them.  If we don't find them, then we assume that it's the same as they aren't in the vehicle 
+					// and want to get in.
+
+					//Finding a player this way is kind of slow.  The caller should know that. 
+					FromSeat = FindSeatContainingPlayer(SeatChangeEvent.Player);
+				}
+			}
+			
+			if (SeatChangeEvent.ToSeat >= 0)
+			{
+				if (AllSeats.IsValidIndex(SeatChangeEvent.ToSeat))
+				{
+					ToSeat = AllSeats[SeatChangeEvent.ToSeat];
+					check(IsValid(ToSeat)); //Seat must be valid (bad data?)
+
+					if (IsValid(ToSeat->PlayerInSeat) && SeatChangeEvent.bFindEmptySeatOnFail)
+					{
+						ToSeat = FindSeatContainingPlayer(nullptr);
+					}
+					else if (IsValid(ToSeat->PlayerInSeat))
+					{
+						//This is a fail to do something situation.  
+						//We need to discover the intent of this change event, then notify the player that it failed.
+						ToSeat = nullptr;
+					}
+				}
+				else if (SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::ANY_SEAT)
+				{
+					ToSeat = FindSeatContainingPlayer(nullptr);
+				}
+			}
+
+			//Now to derive the Intent from the event, and what we can actually do
+			bool bWantsOut = SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::NO_SEAT;
+			bool bWantsASeat = SeatChangeEvent.ToSeat >= 0;
+
+			
+			if (bWantsASeat)
+			{
+				if (IsValid(ToSeat))
+				{
+					if (IsValid(FromSeat))
+					{
+						//remove the player from this seat.  
+						FromSeat->PlayerInSeat = nullptr;
+					}
+
+					//TODO: Put the player into the seat
+
+					ToSeat->PlayerInSeat = SeatChangeEvent.Player;
+				}
+				else
+				{
+					//FAIL CONDITION.  Player wants a seat, but there is no seat for them (or the seat is taken)
+					//TODO: Inform the player.
+
+					continue;
+				}
+			}
+
+			if (bWantsOut)
+			{
+				if (IsValid(FromSeat))
+				{
+					//TODO: Remove the player from this seat
+
+					FromSeat->PlayerInSeat = nullptr;
+				}
+				else
+				{
+					//FAIL CONDITION.  The player isn't in the vehicle.  For now, we can just continue
+					continue;
+				}
+			}			
+			 
+		}
+	}
 }
 

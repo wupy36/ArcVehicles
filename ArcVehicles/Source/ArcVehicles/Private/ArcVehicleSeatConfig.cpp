@@ -10,6 +10,11 @@ UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 	
 }
 
+bool UArcVehicleSeatConfig::IsOpenSeat() const
+{
+	return IsValid(PlayerInSeat);
+}
+
 class AArcBaseVehicle* UArcVehicleSeatConfig::GetVehicleOwner() const
 {
 	return Cast<AArcBaseVehicle>(GetOuter());
@@ -20,7 +25,7 @@ void UArcVehicleSeatConfig::SetupSeatAttachment_Implementation()
 
 }
 
-void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(AActor* PlayerActor)
+void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Player)
 {
-
+	PlayerInSeat = Player;
 }

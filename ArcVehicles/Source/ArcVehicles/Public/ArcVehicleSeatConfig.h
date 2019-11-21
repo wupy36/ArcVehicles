@@ -23,12 +23,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Attach")
 	FArcOwnerAttachmentReference AttachSeatToComponent;
 
+	UPROPERTY(VisibleInstanceOnly, Category="Seat")
+	APlayerState* PlayerInSeat;
+
+	UFUNCTION(BlueprintPure)
+	virtual bool IsOpenSeat() const;
+
 	UFUNCTION(BlueprintPure)
 	class AArcBaseVehicle* GetVehicleOwner() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void SetupSeatAttachment();
 	virtual void SetupSeatAttachment_Implementation();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+		void AttachPlayerToSeat(APlayerState* Player);
+	virtual void AttachPlayerToSeat_Implementation(APlayerState* Player);
 };
 
 UCLASS()
@@ -43,9 +53,7 @@ public:
 	//TODO: Animation Stuff
 
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void AttachPlayerToSeat(AActor* PlayerActor);
-	virtual void AttachPlayerToSeat_Implementation(AActor* PlayerActor);
+	
 };
 
 

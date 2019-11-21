@@ -7,6 +7,7 @@
 #include "ArcBaseVehicle.generated.h"
 
 class UArcVehicleSeatConfig;
+class APlayerState;
 
 USTRUCT()
 struct ARCVEHICLES_API FArcVehicleSeatChangeEvent
@@ -57,6 +58,12 @@ public:
 
 	virtual void GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats);
 
+	virtual bool CanProcessSeatChange(const FArcVehicleSeatChangeEvent& SeatChange);
+	
+	//Returns a valid seat if found a player in that seat, or nullptr if no seat is found.
+	//If you pass nullptr for Player, then it will find the first open seat, or nullptr if all seats are full
+	virtual UArcVehicleSeatConfig* FindSeatContainingPlayer(APlayerState* Player);
+
 public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
@@ -70,6 +77,9 @@ public:
 
 
 private:
+
+	void ProcessSeatChangeQueue();
+
 
 	TArray<FArcVehicleSeatChangeEvent> SeatChangeQueue;
 
