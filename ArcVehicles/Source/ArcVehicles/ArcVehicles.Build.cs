@@ -7,10 +7,10 @@ public class ArcVehicles : ModuleRules
 	public ArcVehicles(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-			
-		
-		PublicDependencyModuleNames.AddRange(
+        PrivatePCHHeaderFile = "Public/ArcVehicles.h";
+
+
+        PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
 				"Core",

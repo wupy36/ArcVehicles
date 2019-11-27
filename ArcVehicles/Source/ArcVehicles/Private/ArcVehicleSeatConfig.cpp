@@ -5,6 +5,7 @@
 
 
 
+
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 {
 	
@@ -28,4 +29,29 @@ void UArcVehicleSeatConfig::SetupSeatAttachment_Implementation()
 void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Player)
 {
 	PlayerInSeat = Player;
+
+	if (IsValid(Player))
+	{
+		if (APawn* PlayerPawn = Player->GetPawn())
+		{
+			USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
+			if (IsValid(SceneComponent))
+			{
+				PlayerPawn->AttachToComponent(SceneComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSeatToComponent.SocketName);		
+				PlayerPawn->SetActorHiddenInGame(!bPlayerVisible);				
+			}
+			else
+			{
+				PlayerPawn->AttachToActor(GetVehicleOwner(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+				PlayerPawn->SetActorHiddenInGame(true); //If we are always attaching to the actor, just hide us
+			}
+			
+		}
+	}
+	
+}
+
+void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(APlayerState* Player)
+{
+
 }

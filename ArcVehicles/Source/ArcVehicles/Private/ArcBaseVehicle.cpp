@@ -4,6 +4,7 @@
 #include "ArcBaseVehicle.h"
 #include "ArcVehicleSeatConfig.h"
 #include "GameFramework/PlayerState.h"
+#include "Player/ArcVehiclePlayerSeatComponent.h"
 
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
 int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
@@ -181,7 +182,6 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			//Now to derive the Intent from the event, and what we can actually do
 			bool bWantsOut = SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::NO_SEAT;
 			bool bWantsASeat = SeatChangeEvent.ToSeat >= 0;
-
 			
 			if (bWantsASeat)
 			{
@@ -193,8 +193,16 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 						FromSeat->PlayerInSeat = nullptr;
 					}
 
-					//TODO: Put the player into the seat
-
+					//Put the player into the seat
+					APawn* PlayerPawn = SeatChangeEvent.Player->GetPawn();
+					UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
+					if (!IsValid(PlayerSeatComponent))
+					{
+						PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
+						PlayerSeatComponent->RegisterComponent();
+					}
+					
+					PlayerSeatComponent->ChangeSeats(ToSeat);
 					ToSeat->PlayerInSeat = SeatChangeEvent.Player;
 				}
 				else
@@ -210,8 +218,15 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			{
 				if (IsValid(FromSeat))
 				{
-					//TODO: Remove the player from this seat
+					APawn* PlayerPawn = SeatChangeEvent.Player->GetPawn();
+					UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
+					if (!IsValid(PlayerSeatComponent))
+					{
+						PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
+						PlayerSeatComponent->RegisterComponent();
+					}
 
+					PlayerSeatComponent->ChangeSeats(nullptr);
 					FromSeat->PlayerInSeat = nullptr;
 				}
 				else

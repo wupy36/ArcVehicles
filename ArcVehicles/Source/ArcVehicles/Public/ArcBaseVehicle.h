@@ -67,6 +67,7 @@ public:
 public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
+	//
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config", Instanced)
 	UArcVehicleSeatConfig* DriverSeatConfig;
 

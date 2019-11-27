@@ -26,6 +26,10 @@ public:
 	UPROPERTY(VisibleInstanceOnly, Category="Seat")
 	APlayerState* PlayerInSeat;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
+	bool bPlayerVisible;
+
+
 	UFUNCTION(BlueprintPure)
 	virtual bool IsOpenSeat() const;
 
@@ -47,9 +51,7 @@ class ARCVEHICLES_API UArcVehicleSeatConfig_PlayerAttachment : public UArcVehicl
 	GENERATED_BODY()
 public:
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
-	bool bPlayerVisible;
-
+	virtual void AttachPlayerToSeat_Implementation(APlayerState* Player) override;
 	//TODO: Animation Stuff
 
 

@@ -3,16 +3,24 @@
 
 #include "ArcVehiclePlayerSeatComponent.h"
 
+
 // Sets default values for this component's properties
 UArcVehiclePlayerSeatComponent::UArcVehiclePlayerSeatComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
 	// ...
 }
 
+
+void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
+}
 
 // Called when the game starts
 void UArcVehiclePlayerSeatComponent::BeginPlay()
@@ -23,12 +31,72 @@ void UArcVehiclePlayerSeatComponent::BeginPlay()
 	
 }
 
-
-// Called every frame
-void UArcVehiclePlayerSeatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	// ...
+	UArcVehicleSeatConfig* PreviousSeat = SeatConfig;
+	SeatConfig = NewSeat;
+
+	//We've entered a vehicle
+	if (PreviousSeat == nullptr && IsValid(SeatConfig))
+	{
+		OnSeatChangeEvent(EArcVehicleSeatChangeType::EnterVehicle);
+	}
+	//We've swapped seats
+	if (IsValid(PreviousSeat) && IsValid(SeatConfig))
+	{
+		OnSeatChangeEvent(EArcVehicleSeatChangeType::SwitchSeats);
+	}
+	//We've exited the vehicle
+	if (IsValid(PreviousSeat) && SeatConfig == nullptr)
+	{
+		OnSeatChangeEvent(EArcVehicleSeatChangeType::ExitVehicle);
+	}
+	//There is no 4th case (when both seats are nullptr.  That shouldn't happen.  If it does... ignore it.
+}
+
+void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* PreviousSeatConfig)
+{
+	//So, we reverted the replication here because ChangeSeats stores the previous seat and changes SeatConfig itself.
+	UArcVehicleSeatConfig* CurrentSeat = SeatConfig;;
+	SeatConfig = PreviousSeatConfig;
+	ChangeSeats(CurrentSeat);
+}
+
+void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
+{
+	if (APawn* OwnerPawn = Cast<APawn>(GetOwner()))
+	{
+		if (SeatChangeType == EArcVehicleSeatChangeType::EnterVehicle || SeatChangeType == EArcVehicleSeatChangeType::SwitchSeats)
+		{
+			if (IsValid(SeatConfig))
+			{
+				SeatConfig->AttachPlayerToSeat(OwnerPawn->GetPlayerState());
+
+				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+				{
+					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+					OwnerChar->GetCharacterMovement()->DisableMovement();
+					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
+				}
+			}
+		}
+
+		if (SeatChangeType == EArcVehicleSeatChangeType::ExitVehicle)
+		{
+			//Reset the player.  If they are invisible, make them visible
+			OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+			OwnerPawn->SetActorHiddenInGame(false);
+
+			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+			{
+				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
+			}
+		}
+
+	}
+	
 }
 

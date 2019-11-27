@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
+#include "EngineMinimal.h"
+
+#include "UnrealNetwork.h"
 
 class FArcVehiclesModule : public IModuleInterface
 {
