@@ -20,11 +20,7 @@
       "LoadingPhase": "Default"
     }
   ],
-  "Plugins": [
-    {
-      "Name": "ArcCore",
-      "Enabled": true
-    },
+  "Plugins": [    
     {
       "Name": "ArcVehicles",
       "Enabled": true

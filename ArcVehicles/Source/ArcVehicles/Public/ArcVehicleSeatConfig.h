@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
-#include "ArcCoreTypes.h"
+#include "ArcVehicleTypes.h"
 #include "ArcVehicleSeatConfig.generated.h"
 
 
