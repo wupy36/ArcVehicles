@@ -7,6 +7,7 @@
 #include "ArcVehicleTypes.h"
 #include "ArcVehicleSeatConfig.generated.h"
 
+class UArcVehiclePlayerSeatComponent;
 
 /**
  * 
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(VisibleInstanceOnly, Category="Seat")
 	APlayerState* PlayerInSeat;
+
+	UPROPERTY()
+	UArcVehiclePlayerSeatComponent* PlayerSeatComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
 	bool bPlayerVisible;

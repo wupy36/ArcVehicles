@@ -2,6 +2,7 @@
 
 
 #include "ArcVehiclePawn.h"
+#include "EngineMinimal.h"
 
 // Sets default values
 AArcVehiclePawn::AArcVehiclePawn()
@@ -30,5 +31,17 @@ void AArcVehiclePawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
+}
+
+void AArcVehiclePawn::BecomePossessedByPlayer(APlayerState* InPlayerState)
+{
+	if (!IsValid(InPlayerState))
+	{
+		return;
+	}
+	if (AController* OtherController = Cast<AController>(InPlayerState->GetOwner()))
+	{
+		OtherController->Possess(this);
+	}
 }
 

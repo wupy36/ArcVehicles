@@ -64,6 +64,14 @@ public:
 	//If you pass nullptr for Player, then it will find the first open seat, or nullptr if all seats are full
 	virtual UArcVehicleSeatConfig* FindSeatContainingPlayer(APlayerState* Player);
 
+	UFUNCTION(BlueprintCallable, Category = "ArcVehicles|Vehicle")
+	virtual void RequestEnterAnySeat(APlayerState* InPlayerState);
+
+	UFUNCTION(BlueprintCallable, Category = "ArcVehicles|Vehicle")
+	virtual void RequestLeaveVehicle(APlayerState* InPlayerState);
+
+	virtual void PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent);
+
 public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
@@ -81,7 +89,7 @@ private:
 
 	void ProcessSeatChangeQueue();
 
-
+	UPROPERTY()
 	TArray<FArcVehicleSeatChangeEvent> SeatChangeQueue;
 
 };

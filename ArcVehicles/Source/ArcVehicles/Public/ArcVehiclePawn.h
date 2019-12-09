@@ -31,5 +31,7 @@ public:
 
 	virtual UArcVehicleSeatConfig* GetSeatConfig() PURE_VIRTUAL(AArcVehiclePawn::GetSeatConfig(), return nullptr;);
 
+	virtual void BecomePossessedByPlayer(APlayerState* InPlayerState);
+
 
 };
