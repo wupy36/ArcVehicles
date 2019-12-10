@@ -2,7 +2,7 @@
 
 
 #include "ArcVehicleSeatConfig.h"
-
+#include "EngineMinimal.h"
 
 
 
@@ -33,10 +33,11 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Play
 	if (IsValid(Player))
 	{
 		if (APawn* PlayerPawn = Player->GetPawn())
-		{
+		{		
+
 			USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
 			if (IsValid(SceneComponent))
-			{
+			{				
 				PlayerPawn->AttachToComponent(SceneComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSeatToComponent.SocketName);		
 				PlayerPawn->SetActorHiddenInGame(!bPlayerVisible);				
 			}
@@ -53,5 +54,5 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Play
 
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(APlayerState* Player)
 {
-
+	Super::AttachPlayerToSeat_Implementation(Player);
 }

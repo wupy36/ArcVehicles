@@ -45,4 +45,8 @@ public:
 	void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
 	void OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType);
 
+
+protected:
+	UPROPERTY()
+	TMap<UPrimitiveComponent*, TEnumAsByte<ECollisionResponse>> PreviousVehicleCollisionResponses;
 };

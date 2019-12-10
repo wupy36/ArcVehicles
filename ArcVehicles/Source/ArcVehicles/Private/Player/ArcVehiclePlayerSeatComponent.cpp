@@ -2,6 +2,7 @@
 
 
 #include "ArcVehiclePlayerSeatComponent.h"
+#include "EngineMinimal.h"
 
 
 // Sets default values for this component's properties
@@ -71,6 +72,16 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		{
 			if (IsValid(SeatConfig))
 			{
+				TInlineComponentArray<UPrimitiveComponent*, 10> PrimComps(OwnerPawn);
+				for (UPrimitiveComponent* comp : PrimComps)
+				{
+					if (!PreviousVehicleCollisionResponses.Contains(comp))
+					{
+						PreviousVehicleCollisionResponses.Add(comp, comp->GetCollisionResponseToChannel(ECC_Vehicle));
+					}					  
+					comp->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
+				}
+
 				SeatConfig->AttachPlayerToSeat(OwnerPawn->GetPlayerState());
 
 				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
@@ -87,6 +98,16 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 			//Reset the player.  If they are invisible, make them visible
 			OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
 			OwnerPawn->SetActorHiddenInGame(false);
+
+			TInlineComponentArray<UPrimitiveComponent*, 10> PrimComps(OwnerPawn);
+			for (UPrimitiveComponent* comp : PrimComps)
+			{
+				if (PreviousVehicleCollisionResponses.Contains(comp))
+				{
+					comp->SetCollisionResponseToChannel(ECC_Vehicle, PreviousVehicleCollisionResponses[comp]);
+				}
+				
+			}
 
 			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
 			{
