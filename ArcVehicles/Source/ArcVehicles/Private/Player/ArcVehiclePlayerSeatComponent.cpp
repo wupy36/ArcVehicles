@@ -35,32 +35,32 @@ void UArcVehiclePlayerSeatComponent::BeginPlay()
 void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 {
 
-	UArcVehicleSeatConfig* PreviousSeat = SeatConfig;
+	PreviousSeatConfig = SeatConfig;
 	SeatConfig = NewSeat;
 
 	//We've entered a vehicle
-	if (PreviousSeat == nullptr && IsValid(SeatConfig))
+	if (PreviousSeatConfig == nullptr && IsValid(SeatConfig))
 	{
 		OnSeatChangeEvent(EArcVehicleSeatChangeType::EnterVehicle);
 	}
 	//We've swapped seats
-	if (IsValid(PreviousSeat) && IsValid(SeatConfig))
+	if (IsValid(PreviousSeatConfig) && IsValid(SeatConfig))
 	{
 		OnSeatChangeEvent(EArcVehicleSeatChangeType::SwitchSeats);
 	}
 	//We've exited the vehicle
-	if (IsValid(PreviousSeat) && SeatConfig == nullptr)
+	if (IsValid(PreviousSeatConfig) && SeatConfig == nullptr)
 	{
 		OnSeatChangeEvent(EArcVehicleSeatChangeType::ExitVehicle);
 	}
 	//There is no 4th case (when both seats are nullptr.  That shouldn't happen.  If it does... ignore it.
 }
 
-void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* PreviousSeatConfig)
+void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig)
 {
 	//So, we reverted the replication here because ChangeSeats stores the previous seat and changes SeatConfig itself.
-	UArcVehicleSeatConfig* CurrentSeat = SeatConfig;;
-	SeatConfig = PreviousSeatConfig;
+	UArcVehicleSeatConfig* CurrentSeat = SeatConfig;
+	SeatConfig = InPreviousSeatConfig;
 	ChangeSeats(CurrentSeat);
 }
 
@@ -98,6 +98,16 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 			//Reset the player.  If they are invisible, make them visible
 			OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
 			OwnerPawn->SetActorHiddenInGame(false);
+			
+
+			FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
+			if (IsValid(PreviousSeatConfig))
+			{
+				ExitLoc = PreviousSeatConfig->GetVehicleOwner()->GetActorLocation() + FVector(0, 0, 300);
+			}
+			
+
+			OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false);
 
 			TInlineComponentArray<UPrimitiveComponent*, 10> PrimComps(OwnerPawn);
 			for (UPrimitiveComponent* comp : PrimComps)

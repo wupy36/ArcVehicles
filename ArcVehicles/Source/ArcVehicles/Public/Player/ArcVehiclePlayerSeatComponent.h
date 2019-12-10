@@ -38,8 +38,11 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Vehicle", ReplicatedUsing=OnRep_SeatConfig)
 	UArcVehicleSeatConfig* SeatConfig;
 
+	UPROPERTY()
+	UArcVehicleSeatConfig* PreviousSeatConfig;
+
 	UFUNCTION()
-	virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* PreviousSeatConfig);
+	virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
 
 	UFUNCTION(BlueprintNativeEvent)
 	void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
