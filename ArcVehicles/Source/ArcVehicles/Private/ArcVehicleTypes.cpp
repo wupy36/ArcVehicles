@@ -1,5 +1,6 @@
 // 2017-2020 Puny Human.  All Rights Reserved
 
+#include "ArcVehicles.h"
 #include "ArcVehicleTypes.h"
 
 class USceneComponent* FArcOwnerAttachmentReference::GetSceneComponent(AActor* OwnerActor)
