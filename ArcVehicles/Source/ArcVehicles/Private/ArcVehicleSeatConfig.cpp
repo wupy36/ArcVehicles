@@ -2,6 +2,10 @@
 
 #include "ArcVehicles.h"
 #include "ArcVehicleSeatConfig.h"
+#include "ArcBaseVehicle.h"
+#include "Seats/ArcVehicleSeat.h"
+#include "ArcVehicleEngineSubsystem.h"
+#include "Net/UnrealNetwork.h"
 #include "EngineMinimal.h"
 
 
@@ -55,4 +59,78 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Play
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(APlayerState* Player)
 {
 	Super::AttachPlayerToSeat_Implementation(Player);
+}
+
+void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawn);
+}
+
+void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehicleSeat* OldSeatPawn)
+{
+	if (!IsValid(SeatPawn))
+	{
+		return;
+	}
+
+	AArcBaseVehicle* OwnerVehicle = GetVehicleOwner();
+	check(IsValid(OwnerVehicle));
+
+
+	UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
+	TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(OwnerVehicle);
+	TInlineComponentArray<UPrimitiveComponent*> SeatPawnComponents(SeatPawn);
+
+	for (UPrimitiveComponent* VC : VehicleComponents)
+	{
+		for (UPrimitiveComponent* SC : SeatPawnComponents)
+		{
+			EngSub->IgnoreBetween(VC, SC);
+		}
+	}
+}
+
+void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
+{
+	Super::SetupSeatAttachment_Implementation();
+
+	if (!ensure(IsValid(SeatPawnClass)))
+	{
+		return;
+	}
+
+	AArcBaseVehicle* OwnerVehicle = GetVehicleOwner();
+	check(IsValid(OwnerVehicle));	
+
+	USceneComponent* SC = AttachSeatToComponent.GetSceneComponent(OwnerVehicle);
+	FTransform TForm = FTransform::Identity;
+	if (IsValid(SC))
+	{
+		TForm = SC->GetSocketTransform(AttachSeatToComponent.SocketName, RTS_World);
+	}
+	else
+	{
+		TForm = OwnerVehicle->GetActorTransform();
+	}
+
+	SeatPawn = OwnerVehicle->GetWorld()->SpawnActorDeferred<AArcVehicleSeat>(SeatPawnClass, TForm, OwnerVehicle, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	if (IsValid(SeatPawn))
+	{
+		SeatPawn->SeatConfig = this;
+		if (IsValid(SC))
+		{
+			
+			SeatPawn->AttachToComponent(SC, FAttachmentTransformRules::SnapToTargetIncludingScale, AttachSeatToComponent.SocketName);
+		}
+		else
+		{
+			SeatPawn->AttachToActor(OwnerVehicle, FAttachmentTransformRules::SnapToTargetIncludingScale);
+		}	
+	}
+
+	UGameplayStatics::FinishSpawningActor(SeatPawn, TForm);
+
+	OnRep_SeatPawn(nullptr);
 }

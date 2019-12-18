@@ -15,6 +15,8 @@ class ARCVEHICLES_API AArcVehicleSeat : public AArcVehiclePawn
 
 public:
 	friend class AArcBaseVehicle;
+	friend class UArcVehicleSeatConfig;
+	friend class UArcVehicleSeatConfig_SeatPawn;
 
 	// Sets default values for this pawn's properties
 	AArcVehicleSeat();

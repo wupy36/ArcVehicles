@@ -36,6 +36,9 @@ public:
 	// Sets default values for this pawn's properties
 	AArcBaseVehicle();
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
+	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

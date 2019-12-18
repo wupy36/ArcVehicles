@@ -6,6 +6,8 @@
 #include "ArcVehicleSeatConfig.h"
 #include "GameFramework/PlayerState.h"
 #include "Player/ArcVehiclePlayerSeatComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/ActorChannel.h"
 
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
 int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
@@ -17,6 +19,26 @@ AArcBaseVehicle::AArcBaseVehicle()
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+}
+
+void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
+
+bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
+{
+	bool bWroteSomething = false;
+
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	for (UArcVehicleSeatConfig* SeatConfig : AllSeats)
+	{
+		bWroteSomething |= Channel->ReplicateSubobject(SeatConfig, *Bunch, *RepFlags);		
+	}
+
+	return bWroteSomething;
 }
 
 // Called when the game starts or when spawned

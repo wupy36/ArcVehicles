@@ -68,6 +68,9 @@ class ARCVEHICLES_API UArcVehicleSeatConfig_SeatPawn : public UArcVehicleSeatCon
 {
 	GENERATED_BODY()
 public:
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Seat Pawn")
 	TSubclassOf<class AArcVehicleSeat> SeatPawnClass;
 
@@ -77,4 +80,12 @@ public:
 		
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
 	FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
+
+	UPROPERTY(ReplicatedUsing=OnRep_SeatPawn)
+	AArcVehicleSeat* SeatPawn;
+
+	UFUNCTION()
+	void OnRep_SeatPawn(AArcVehicleSeat* OldSeatPawn);
+
+	virtual void SetupSeatAttachment_Implementation() override;
 };

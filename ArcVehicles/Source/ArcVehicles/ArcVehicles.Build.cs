@@ -30,6 +30,19 @@ public class ArcVehicles : ModuleRules
 			}
 			);
 
+        //Using Physx
+        PrivateDependencyModuleNames.AddRange(
+        new string[]
+        {
+            "PhysX",
+            "APEX",
+        });
+        
+        PrivateIncludePaths.AddRange(
+                new string[] {
+                    "Engine/Private/"
+                });
+
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(
