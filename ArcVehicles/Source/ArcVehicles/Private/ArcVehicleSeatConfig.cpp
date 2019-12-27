@@ -115,22 +115,23 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 		TForm = OwnerVehicle->GetActorTransform();
 	}
 
-	SeatPawn = OwnerVehicle->GetWorld()->SpawnActorDeferred<AArcVehicleSeat>(SeatPawnClass, TForm, OwnerVehicle, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	SeatPawn = OwnerVehicle->GetWorld()->SpawnActorDeferred<AArcVehicleSeat>(SeatPawnClass, TForm, OwnerVehicle, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);	
+
+	UGameplayStatics::FinishSpawningActor(SeatPawn, TForm);
+
 	if (IsValid(SeatPawn))
 	{
 		SeatPawn->SeatConfig = this;
 		if (IsValid(SC))
 		{
-			
+
 			SeatPawn->AttachToComponent(SC, FAttachmentTransformRules::SnapToTargetIncludingScale, AttachSeatToComponent.SocketName);
 		}
 		else
 		{
 			SeatPawn->AttachToActor(OwnerVehicle, FAttachmentTransformRules::SnapToTargetIncludingScale);
-		}	
+		}
 	}
-
-	UGameplayStatics::FinishSpawningActor(SeatPawn, TForm);
 
 	OnRep_SeatPawn(nullptr);
 }
