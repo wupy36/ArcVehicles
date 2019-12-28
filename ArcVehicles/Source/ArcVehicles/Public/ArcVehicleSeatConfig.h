@@ -8,6 +8,7 @@
 #include "ArcVehicleSeatConfig.generated.h"
 
 class UArcVehiclePlayerSeatComponent;
+class AArcVehiclePawn;
 
 /**
  * 
@@ -32,8 +33,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
 	bool bPlayerVisible;
-
-
+	
 	UFUNCTION(BlueprintPure)
 	virtual bool IsOpenSeat() const;
 
@@ -47,6 +47,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 		void AttachPlayerToSeat(APlayerState* Player);
 	virtual void AttachPlayerToSeat_Implementation(APlayerState* Player);
+
+	virtual AArcVehiclePawn* GetSeatPawn() const;
+
+	
+	UFUNCTION(BlueprintPure)
+	bool IsDriverSeat() const;
 };
 
 UCLASS()
@@ -82,10 +88,12 @@ public:
 	FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
 
 	UPROPERTY(ReplicatedUsing=OnRep_SeatPawn)
-	AArcVehicleSeat* SeatPawn;
+	AArcVehiclePawn* SeatPawn;
 
 	UFUNCTION()
-	void OnRep_SeatPawn(AArcVehicleSeat* OldSeatPawn);
+	void OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn);
 
 	virtual void SetupSeatAttachment_Implementation() override;
+
+	virtual AArcVehiclePawn* GetSeatPawn() const override;
 };

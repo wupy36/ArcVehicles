@@ -56,6 +56,21 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Play
 	
 }
 
+AArcVehiclePawn* UArcVehicleSeatConfig::GetSeatPawn() const
+{
+	if (IsDriverSeat())
+	{
+		return GetVehicleOwner();
+	}
+
+	return nullptr;
+}
+
+bool UArcVehicleSeatConfig::IsDriverSeat() const
+{
+	return GetVehicleOwner()->DriverSeatConfig == this;
+}
+
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(APlayerState* Player)
 {
 	Super::AttachPlayerToSeat_Implementation(Player);
@@ -68,7 +83,7 @@ void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLi
 	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawn);
 }
 
-void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehicleSeat* OldSeatPawn)
+void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn)
 {
 	if (!IsValid(SeatPawn))
 	{
@@ -96,6 +111,12 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 {
 	Super::SetupSeatAttachment_Implementation();
 
+	//Don't spawn the seat if we are the driver seat
+	if (IsDriverSeat())
+	{
+		return;
+	}
+
 	if (!ensure(IsValid(SeatPawnClass)))
 	{
 		return;
@@ -115,13 +136,22 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 		TForm = OwnerVehicle->GetActorTransform();
 	}
 
-	SeatPawn = OwnerVehicle->GetWorld()->SpawnActorDeferred<AArcVehicleSeat>(SeatPawnClass, TForm, OwnerVehicle, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);	
-
-	UGameplayStatics::FinishSpawningActor(SeatPawn, TForm);
-
-	if (IsValid(SeatPawn))
+	AArcVehicleSeat* NewSeatPawn = OwnerVehicle->GetWorld()->SpawnActorDeferred<AArcVehicleSeat>(SeatPawnClass, TForm, OwnerVehicle, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	if (IsValid(NewSeatPawn))
 	{
-		SeatPawn->SeatConfig = this;
+		NewSeatPawn->SeatConfig = this;
+
+		UGameplayStatics::FinishSpawningActor(NewSeatPawn, TForm);
+	}
+	else
+	{
+		return;
+	}
+	
+
+	SeatPawn = NewSeatPawn;
+	if (IsValid(SeatPawn))
+	{		
 		if (IsValid(SC))
 		{
 
@@ -134,4 +164,15 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 	}
 
 	OnRep_SeatPawn(nullptr);
+}
+
+AArcVehiclePawn* UArcVehicleSeatConfig_SeatPawn::GetSeatPawn() const
+{
+	AArcVehiclePawn* Pawn = Super::GetSeatPawn();
+	if (IsValid(SeatPawn))
+	{
+		return Pawn;
+	}
+
+	return SeatPawn;
 }

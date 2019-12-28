@@ -22,6 +22,8 @@ public:
 
 	bool bFindEmptySeatOnFail;
 
+	bool bIgnoreAnyRestrictions;
+
 	UPROPERTY()
 	APlayerState* Player;
 
@@ -51,6 +53,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
+
+	virtual AArcBaseVehicle* GetOwningVehicle() override;
 	
 
 	virtual void SetupVehicleSeats();
@@ -72,6 +76,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "ArcVehicles|Vehicle")
 	virtual void RequestLeaveVehicle(APlayerState* InPlayerState);
+
+	UFUNCTION(BlueprintCallable, Category = "ArcVehicles|Vehicle")
+	virtual void RequestEnterSeat(APlayerState* InPlayerState, int32 RequestedSeatIndex, bool bIgnoreRestrictions = false);
+
+	UFUNCTION(BlueprintPure, Category = "ArcVehicles|Vehicle")
+	bool IsValidSeatIndex(int32 InSeatIndex) const;
 
 	virtual void PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent);
 

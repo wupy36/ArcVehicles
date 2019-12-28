@@ -29,9 +29,14 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	UFUNCTION(BlueprintPure, Category = "Arc|Vehicle")
+
 	virtual UArcVehicleSeatConfig* GetSeatConfig() PURE_VIRTUAL(AArcVehiclePawn::GetSeatConfig(), return nullptr;);
 
 	virtual void BecomePossessedByPlayer(APlayerState* InPlayerState);
+
+	UFUNCTION(BlueprintPure, Category="Arc|Vehicle")
+	virtual AArcBaseVehicle* GetOwningVehicle();
 
 
 };

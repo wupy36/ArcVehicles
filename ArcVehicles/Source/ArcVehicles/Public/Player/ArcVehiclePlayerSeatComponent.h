@@ -41,6 +41,9 @@ public:
 	UPROPERTY()
 	UArcVehicleSeatConfig* PreviousSeatConfig;
 
+	UPROPERTY(Replicated)
+	APlayerState* StoredPlayerState;
+
 	UFUNCTION()
 	virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
 

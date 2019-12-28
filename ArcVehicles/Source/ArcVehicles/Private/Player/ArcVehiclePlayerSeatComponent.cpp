@@ -21,6 +21,7 @@ void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME(UArcVehiclePlayerSeatComponent, StoredPlayerState);
 }
 
 // Called when the game starts
@@ -72,14 +73,16 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		{
 			if (IsValid(SeatConfig))
 			{
-				TInlineComponentArray<UPrimitiveComponent*, 10> PrimComps(OwnerPawn);
-				for (UPrimitiveComponent* comp : PrimComps)
+				UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
+				TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(SeatConfig->GetVehicleOwner());
+				TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
+
+				for (UPrimitiveComponent* VC : VehicleComponents)
 				{
-					if (!PreviousVehicleCollisionResponses.Contains(comp))
+					for (UPrimitiveComponent* SC : OwnerPawnComponents)
 					{
-						PreviousVehicleCollisionResponses.Add(comp, comp->GetCollisionResponseToChannel(ECC_Vehicle));
-					}					  
-					comp->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
+						EngSub->IgnoreBetween(VC, SC);
+					}
 				}
 
 				SeatConfig->AttachPlayerToSeat(OwnerPawn->GetPlayerState());
@@ -89,7 +92,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
 					OwnerChar->GetCharacterMovement()->DisableMovement();
 					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
-				}
+				}			
 			}
 		}
 
@@ -109,14 +112,16 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 
 			OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false);
 
-			TInlineComponentArray<UPrimitiveComponent*, 10> PrimComps(OwnerPawn);
-			for (UPrimitiveComponent* comp : PrimComps)
+			UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
+			TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(PreviousSeatConfig->GetVehicleOwner());
+			TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
+
+			for (UPrimitiveComponent* VC : VehicleComponents)
 			{
-				if (PreviousVehicleCollisionResponses.Contains(comp))
+				for (UPrimitiveComponent* SC : OwnerPawnComponents)
 				{
-					comp->SetCollisionResponseToChannel(ECC_Vehicle, PreviousVehicleCollisionResponses[comp]);
+					EngSub->RemoveIgnoreBetween(VC, SC);
 				}
-				
 			}
 
 			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))

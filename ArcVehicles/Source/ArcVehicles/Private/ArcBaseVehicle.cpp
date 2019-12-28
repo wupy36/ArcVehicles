@@ -6,6 +6,7 @@
 #include "ArcVehicleSeatConfig.h"
 #include "GameFramework/PlayerState.h"
 #include "Player/ArcVehiclePlayerSeatComponent.h"
+#include "Player/ArcVehiclePlayerStateComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
 
@@ -77,6 +78,11 @@ UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig()
 	return DriverSeatConfig;
 }
 
+AArcBaseVehicle* AArcBaseVehicle::GetOwningVehicle() 
+{
+	return this;
+}
+
 void AArcBaseVehicle::SetupVehicleSeats()
 {
 	TArray<UArcVehicleSeatConfig*> Seats;
@@ -84,6 +90,15 @@ void AArcBaseVehicle::SetupVehicleSeats()
 
 	for (UArcVehicleSeatConfig* SeatConfig : Seats)
 	{
+		if (SeatConfig == DriverSeatConfig)
+		{
+			if (UArcVehicleSeatConfig_SeatPawn* PawnConfig = Cast<UArcVehicleSeatConfig_SeatPawn>(SeatConfig))
+			{
+				PawnConfig->SeatPawnClass = nullptr;
+				PawnConfig->SeatPawn = this;
+			}
+		}
+
 		SetupSeat(SeatConfig);
 	}
 }
@@ -136,6 +151,7 @@ void AArcBaseVehicle::RequestEnterAnySeat(APlayerState* InPlayerState)
 	SeatChangeEvent.Player = InPlayerState;
 	SeatChangeEvent.FromSeat = FArcVehicleSeatChangeEvent::NO_SEAT;
 	SeatChangeEvent.ToSeat = FArcVehicleSeatChangeEvent::ANY_SEAT;
+	SeatChangeEvent.bFindEmptySeatOnFail = true;
 
 	PushSeatChangeEvent(SeatChangeEvent);
 }
@@ -153,6 +169,44 @@ void AArcBaseVehicle::RequestLeaveVehicle(APlayerState* InPlayerState)
 	SeatChangeEvent.ToSeat = FArcVehicleSeatChangeEvent::NO_SEAT;
 
 	PushSeatChangeEvent(SeatChangeEvent);
+}
+
+void AArcBaseVehicle::RequestEnterSeat(APlayerState* InPlayerState, int32 RequestedSeat, bool bIgnoreRestrictions /*= false*/)
+{
+	if (Role != ROLE_Authority)
+	{
+		return;
+	}
+
+	//If we don't have a valid seat, return
+	if (!IsValidSeatIndex(RequestedSeat))
+	{
+		return;
+	}
+	
+
+	FArcVehicleSeatChangeEvent SeatChangeEvent;
+	SeatChangeEvent.Player = InPlayerState;
+	SeatChangeEvent.FromSeat = FArcVehicleSeatChangeEvent::ANY_SEAT;
+	SeatChangeEvent.ToSeat = RequestedSeat;
+	SeatChangeEvent.bIgnoreAnyRestrictions = bIgnoreRestrictions;
+
+	PushSeatChangeEvent(SeatChangeEvent);
+}
+
+bool AArcBaseVehicle::IsValidSeatIndex(int32 InSeatIndex) const
+{
+	if (InSeatIndex < 0)
+	{
+		return false;
+	}
+
+	if (InSeatIndex >= AdditionalSeatConfigs.Num() + 1)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 void AArcBaseVehicle::PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent)
@@ -228,6 +282,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 					ToSeat = AllSeats[SeatChangeEvent.ToSeat];
 					check(IsValid(ToSeat)); //Seat must be valid (bad data?)
 
+					//If IsValid(ToSeat->PlayerInSeat), that means someone is in this seat
 					if (IsValid(ToSeat->PlayerInSeat) && SeatChangeEvent.bFindEmptySeatOnFail)
 					{
 						ToSeat = FindSeatContainingPlayer(nullptr);
@@ -245,9 +300,47 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 				}
 			}
 
+
+
+			//PLAYER INFORMATION
+			//Player information is stored in two objects, the PlayerStateComponent (attached to a PlayerState) and the PlayerSeat Component.
+			//Player State Component stores information for the player state.  What actor the player was previously possessing before changing it for vehicles, etc. It is authority-only
+			//Player Seat Component is replicated and is for any pawn that is attached to the vehicle
+
+			//Check if this player has a PlayerStateComp.  If not, create one for them
+			UArcVehiclePlayerStateComponent* PlayerStateComp = SeatChangeEvent.Player->FindComponentByClass<UArcVehiclePlayerStateComponent>();
+			if (!IsValid(PlayerStateComp))
+			{
+				PlayerStateComp = NewObject<UArcVehiclePlayerStateComponent>(SeatChangeEvent.Player);
+				PlayerStateComp->RegisterComponent();
+			}
+
+			check(IsValid(PlayerStateComp));
+
+			APawn* PlayerPawn = SeatChangeEvent.Player->GetPawn();
+
+			//If the pawn is this or it's owner is this, then the player is sitting in the vehicle and possessing one of our pawns
+			//So use our old pawn
+			if (PlayerPawn == this || PlayerPawn->GetOwner() == this)
+			{
+				PlayerPawn = PlayerStateComp->StoredPlayerPawn;
+			}
+
+			check(IsValid(PlayerPawn));
+
+			UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
+			if (!IsValid(PlayerSeatComponent))
+			{
+				PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
+				PlayerSeatComponent->RegisterComponent();
+			}
+
+			check(IsValid(PlayerSeatComponent));
+
+
 			//Now to derive the Intent from the event, and what we can actually do
-			bool bWantsOut = SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::NO_SEAT;
-			bool bWantsASeat = SeatChangeEvent.ToSeat >= 0;
+			const bool bWantsOut = SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::NO_SEAT;
+			const bool bWantsASeat = SeatChangeEvent.ToSeat >= 0;
 			
 			if (bWantsASeat)
 			{
@@ -259,23 +352,29 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 						FromSeat->PlayerInSeat = nullptr;
 					}
 
-					//Put the player into the seat
-					APawn* PlayerPawn = SeatChangeEvent.Player->GetPawn();
-					UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
-					if (!IsValid(PlayerSeatComponent))
-					{
-						PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
-						PlayerSeatComponent->RegisterComponent();
-					}
-					
+					//Put the player into the seat		
 					PlayerSeatComponent->ChangeSeats(ToSeat);
 					ToSeat->PlayerInSeat = SeatChangeEvent.Player;
 					ToSeat->PlayerSeatComponent = PlayerSeatComponent;
 
-					//if we are the driver seat, take the controller from the player state and posses us.
-					if (ToSeat == DriverSeatConfig)
+					//a seat with a seat pawn (like the driver seat), take the controller from the player state and posses us.
+					AArcVehiclePawn* SeatPawn = ToSeat->GetSeatPawn();
+					if (IsValid(SeatPawn))
 					{
-						BecomePossessedByPlayer(SeatChangeEvent.Player);
+						SeatPawn->BecomePossessedByPlayer(SeatChangeEvent.Player);
+						PlayerStateComp->StoredPlayerPawn = PlayerPawn;
+					}
+					else
+					{
+						//Make sure the player possesses their own pawn
+						if (AController* SeatedPlayerController = Cast<AController>(SeatChangeEvent.Player->GetOwner()))
+						{
+							if (SeatedPlayerController->GetPawn() != PlayerPawn)
+							{
+								SeatedPlayerController->Possess(PlayerStateComp->StoredPlayerPawn);
+								PlayerStateComp->StoredPlayerPawn = nullptr;
+							}							
+						}
 					}
 				}
 				else
@@ -290,20 +389,14 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			if (bWantsOut)
 			{
 				if (IsValid(FromSeat))
-				{
-					UArcVehiclePlayerSeatComponent* PlayerSeatComponent = FromSeat->PlayerSeatComponent;
-
-					//We have a problem if we weren't able to find the PlayerSeatComponent for a player in a seat. 
-					//It means the player got into the vehicle without going through a seat change event and some parts were not set.
-					check(IsValid(PlayerSeatComponent));
-					
-					
+				{		
 					PlayerSeatComponent->ChangeSeats(nullptr);
 					FromSeat->PlayerInSeat = nullptr;
 
 					if (AController* SeatedPlayerController = Cast<AController>(SeatChangeEvent.Player->GetOwner()))
 					{
-						SeatedPlayerController->Possess(Cast<APawn>(PlayerSeatComponent->GetOwner()));
+						SeatedPlayerController->Possess(PlayerStateComp->StoredPlayerPawn);
+						PlayerStateComp->StoredPlayerPawn = nullptr;
 					}
 					
 				}

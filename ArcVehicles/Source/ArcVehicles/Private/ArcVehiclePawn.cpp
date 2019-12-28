@@ -45,3 +45,8 @@ void AArcVehiclePawn::BecomePossessedByPlayer(APlayerState* InPlayerState)
 	}
 }
 
+AArcBaseVehicle* AArcVehiclePawn::GetOwningVehicle()
+{
+	return GetSeatConfig()->GetVehicleOwner();
+}
+
