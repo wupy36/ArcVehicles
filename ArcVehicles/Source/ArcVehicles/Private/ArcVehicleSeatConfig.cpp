@@ -102,7 +102,7 @@ void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn
 	{
 		for (UPrimitiveComponent* SC : SeatPawnComponents)
 		{
-			EngSub->IgnoreBetween(VC, SC);
+			EngSub->IgnoreBetween(VC, SC);			
 		}
 	}
 }

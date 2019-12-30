@@ -61,6 +61,9 @@ bool UArcVehicleEngineSubsystem::IgnoreBetween(USceneComponent* ObjA, USceneComp
 	IgnorePair.ObjA = ObjA;
 	IgnorePair.ObjB = ObjB;
 
+	ObjA->RecreatePhysicsState();
+	ObjB->RecreatePhysicsState();
+
 	return IgnoreComponents.Add(IgnorePair) >=0;
 }
 
@@ -71,7 +74,7 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USce
 	{
 		FIgnorePair& IP = IgnoreComponents[i];
 
-		if ((IP.ObjA == ObjA || IP.ObjB == ObjB)
+		if ((IP.ObjA == ObjA || IP.ObjA == ObjB)
 			&& (IP.ObjB == ObjA || IP.ObjB == ObjB))
 		{
 			IgnoreComponents.RemoveAt(i);
