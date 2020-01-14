@@ -7,6 +7,7 @@
 #include "ArcVehicleEngineSubsystem.h"
 #include "Net/UnrealNetwork.h"
 #include "EngineMinimal.h"
+#include "Engine.h"
 
 
 

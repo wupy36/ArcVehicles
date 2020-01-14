@@ -2,6 +2,8 @@
 
 #include "ArcVehicles.h"
 #include "ArcVehiclePawn.h"
+#include "ArcVehicleSeatConfig.h"
+#include "GameFramework/PlayerState.h"
 #include "EngineMinimal.h"
 
 // Sets default values

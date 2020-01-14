@@ -1,7 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ArcVehicles.h"
+#include "ArcBaseVehicle.h"
 #include "ArcVehiclePlayerSeatComponent.h"
+#include "ArcVehicleSeatConfig.h"
+#include "ArcVehicleEngineSubsystem.h"
+#include "Components/PrimitiveComponent.h"
 #include "EngineMinimal.h"
 
 
