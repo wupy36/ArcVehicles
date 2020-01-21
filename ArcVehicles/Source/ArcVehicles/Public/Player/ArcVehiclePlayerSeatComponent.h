@@ -16,7 +16,7 @@ enum class EArcVehicleSeatChangeType : uint8
 	SwitchSeats
 };
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent), Blueprintable )
 class ARCVEHICLES_API UArcVehiclePlayerSeatComponent : public UActorComponent
 {
 	GENERATED_BODY()

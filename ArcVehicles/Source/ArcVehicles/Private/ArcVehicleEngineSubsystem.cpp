@@ -3,14 +3,20 @@
 
 #include "ArcVehicleEngineSubsystem.h"
 #include "PhysicsFiltering.h"
+#include "PhysicsEngine/RigidBodyIndexPair.h"
+#include "Physics/PhysicsInterfaceDeclares.h"
+#include "Physics/PhysScene_PhysX.h"
 
 
 
 
 #if WITH_PHYSX
-PxFilterFlags PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
-	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
-	PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize);
+namespace ArcVehicles
+{
+	PxFilterFlags PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize);
+}
 
 static TWeakObjectPtr<UArcVehicleEngineSubsystem> EngineSubsystem;
 
@@ -37,7 +43,7 @@ static PxFilterFlags PhysXSimFilterShader_VehicleAttach(PxFilterObjectAttributes
 	}
 
 	//Call the engine version of the filter shader	
-	return PhysXSimFilterShader(attributes0, filterData0, attributes1, filterData1, pairFlags, constantBlock, constantBlockSize);	
+	return ArcVehicles::PhysXSimFilterShader(attributes0, filterData0, attributes1, filterData1, pairFlags, constantBlock, constantBlockSize);
 }
 #endif
 
@@ -89,7 +95,7 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USce
 
 //Taken from PHysXSupport line 133
 #if WITH_PHYSX
-PxFilterFlags PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+PxFilterFlags ArcVehicles::PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
 	PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 {

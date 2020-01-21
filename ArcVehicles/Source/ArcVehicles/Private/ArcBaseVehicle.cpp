@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "Player/ArcVehiclePlayerStateComponent.h"
+#include "ArcVehicleDeveloperSettings.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
 
@@ -311,7 +312,10 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			UArcVehiclePlayerStateComponent* PlayerStateComp = SeatChangeEvent.Player->FindComponentByClass<UArcVehiclePlayerStateComponent>();
 			if (!IsValid(PlayerStateComp))
 			{
-				PlayerStateComp = NewObject<UArcVehiclePlayerStateComponent>(SeatChangeEvent.Player);
+				const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
+				TSubclassOf<UArcVehiclePlayerStateComponent> StateCompClass = Settings->PlayerStateComponentClass;
+
+				PlayerStateComp = NewObject<UArcVehiclePlayerStateComponent>(SeatChangeEvent.Player, StateCompClass);
 				PlayerStateComp->RegisterComponent();
 			}
 
@@ -331,6 +335,9 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
 			if (!IsValid(PlayerSeatComponent))
 			{
+				const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
+				TSubclassOf<UArcVehiclePlayerSeatComponent> StateCompClass = Settings->PlayerSeatComponentClass;
+
 				PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
 				PlayerSeatComponent->RegisterComponent();
 			}

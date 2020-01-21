@@ -37,13 +37,8 @@ public class ArcVehicles : ModuleRules
             "PhysX",
             "APEX",
         });
-        
-        PrivateIncludePaths.AddRange(
-                new string[] {
-                    "Engine/Private/"
-                });
 
-        if (Target.Type == TargetType.Editor)
+		if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(
             new string[]

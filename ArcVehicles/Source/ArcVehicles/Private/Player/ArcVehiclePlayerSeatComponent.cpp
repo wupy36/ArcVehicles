@@ -7,6 +7,7 @@
 #include "ArcVehicleEngineSubsystem.h"
 #include "Components/PrimitiveComponent.h"
 #include "EngineMinimal.h"
+#include "Engine/Engine.h"
 
 
 // Sets default values for this component's properties
