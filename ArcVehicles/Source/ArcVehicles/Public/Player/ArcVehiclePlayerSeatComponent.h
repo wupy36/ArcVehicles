@@ -7,6 +7,7 @@
 #include "ArcVehiclePlayerSeatComponent.generated.h"
 
 class UArcVehicleSeatConfig;
+class APlayerState;
 
 UENUM(BlueprintType)
 enum class EArcVehicleSeatChangeType : uint8
