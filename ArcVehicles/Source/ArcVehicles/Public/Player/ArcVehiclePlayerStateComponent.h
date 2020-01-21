@@ -7,7 +7,7 @@
 #include "ArcVehiclePlayerStateComponent.generated.h"
 
 
-UCLASS( ClassGroup=(ArcVehicles), meta=(BlueprintSpawnableComponent) )
+UCLASS( ClassGroup=(ArcVehicles), meta=(BlueprintSpawnableComponent), Blueprintable )
 class ARCVEHICLES_API UArcVehiclePlayerStateComponent : public UActorComponent
 {
 	GENERATED_BODY()
