@@ -5,8 +5,8 @@
 #include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "Player/ArcVehiclePlayerStateComponent.h"
 
-UArcVehicleDeveloperSettings::UArcVehicleDeveloperSettings()
-	: Super()
+UArcVehicleDeveloperSettings::UArcVehicleDeveloperSettings(const FObjectInitializer& ObjectInitializer) 
+	: Super(ObjectInitializer)
 {
 	PlayerSeatComponentClass = UArcVehiclePlayerSeatComponent::StaticClass();
 	PlayerStateComponentClass = UArcVehiclePlayerStateComponent::StaticClass();

@@ -4,18 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
-#include "Templates/SubclassOf.h"
 #include "ArcVehicleDeveloperSettings.generated.h"
 
 /**
  * 
  */
-UCLASS(config = Game)
+UCLASS(Config=Game, defaultconfig)
 class ARCVEHICLES_API UArcVehicleDeveloperSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()
 public:
-	UArcVehicleDeveloperSettings();
+	UArcVehicleDeveloperSettings(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Vehicle Config", config)
 	TSubclassOf<class UArcVehiclePlayerSeatComponent> PlayerSeatComponentClass;
