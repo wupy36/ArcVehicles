@@ -2,7 +2,7 @@
 
 #include "ArcVehicles.h"
 #include "ArcBaseVehicle.h"
-#include "ArcVehiclePlayerSeatComponent.h"
+#include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "ArcVehicleSeatConfig.h"
 #include "ArcVehicleEngineSubsystem.h"
 #include "Components/PrimitiveComponent.h"
