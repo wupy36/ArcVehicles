@@ -60,7 +60,7 @@ void AArcBaseVehicle::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Role == ROLE_Authority)
+	if (GetLocalRole() == ROLE_Authority)
 	{
 		ProcessSeatChangeQueue();
 	}
@@ -143,7 +143,7 @@ UArcVehicleSeatConfig* AArcBaseVehicle::FindSeatContainingPlayer(APlayerState* P
 
 void AArcBaseVehicle::RequestEnterAnySeat(APlayerState* InPlayerState)
 {
-	if (Role != ROLE_Authority)
+	if (GetLocalRole() != ROLE_Authority)
 	{
 		return;
 	}
@@ -159,7 +159,7 @@ void AArcBaseVehicle::RequestEnterAnySeat(APlayerState* InPlayerState)
 
 void AArcBaseVehicle::RequestLeaveVehicle(APlayerState* InPlayerState)
 {
-	if (Role != ROLE_Authority)
+	if (GetLocalRole() != ROLE_Authority)
 	{
 		return;
 	}
@@ -174,7 +174,7 @@ void AArcBaseVehicle::RequestLeaveVehicle(APlayerState* InPlayerState)
 
 void AArcBaseVehicle::RequestEnterSeat(APlayerState* InPlayerState, int32 RequestedSeat, bool bIgnoreRestrictions /*= false*/)
 {
-	if (Role != ROLE_Authority)
+	if (GetLocalRole() != ROLE_Authority)
 	{
 		return;
 	}
