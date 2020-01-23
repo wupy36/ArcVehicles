@@ -42,7 +42,7 @@ public:
 	UPROPERTY()
 	UArcVehicleSeatConfig* PreviousSeatConfig;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", Replicated)
 	APlayerState* StoredPlayerState;
 
 	UFUNCTION()

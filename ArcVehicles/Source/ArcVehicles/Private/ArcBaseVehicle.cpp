@@ -336,9 +336,9 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			if (!IsValid(PlayerSeatComponent))
 			{
 				const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
-				TSubclassOf<UArcVehiclePlayerSeatComponent> StateCompClass = Settings->PlayerSeatComponentClass;
+				TSubclassOf<UArcVehiclePlayerSeatComponent> PlayerCompClass = Settings->PlayerSeatComponentClass;
 
-				PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn);
+				PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn, PlayerCompClass);
 				PlayerSeatComponent->RegisterComponent();
 			}
 
@@ -369,6 +369,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 					if (IsValid(SeatPawn))
 					{
 						SeatPawn->BecomePossessedByPlayer(SeatChangeEvent.Player);
+						PlayerSeatComponent->StoredPlayerState = SeatChangeEvent.Player;
 						PlayerStateComp->StoredPlayerPawn = PlayerPawn;
 					}
 					else
