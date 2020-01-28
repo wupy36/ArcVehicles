@@ -33,6 +33,7 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	virtual void OnRegister() override;
 
 	virtual void ChangeSeats(UArcVehicleSeatConfig* NewSeat);
 
