@@ -2,7 +2,7 @@
 
 #include "ArcVehicles.h"
 #include "ArcBaseVehicle.h"
-#include "ArcVehiclePlayerSeatComponent.h"
+#include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "ArcVehicleSeatConfig.h"
 #include "ArcVehicleEngineSubsystem.h"
 #include "Components/PrimitiveComponent.h"
@@ -16,8 +16,8 @@ UArcVehiclePlayerSeatComponent::UArcVehiclePlayerSeatComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
+	SetIsReplicatedByDefault(true);
 
-	bReplicates = true;
 
 	// ...
 }

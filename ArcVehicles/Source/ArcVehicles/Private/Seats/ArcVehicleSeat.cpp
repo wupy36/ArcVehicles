@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "ArcVehicleSeat.h"
+#include "Seats/ArcVehicleSeat.h"
 
 // Sets default values
 AArcVehicleSeat::AArcVehicleSeat()

@@ -2,7 +2,7 @@
 
 
 #include "ArcVehicleEngineSubsystem.h"
-#include "PhysicsFiltering.h"
+#include "Physics/PhysicsFiltering.h"
 #include "PhysicsEngine/RigidBodyIndexPair.h"
 #include "Physics/PhysicsInterfaceDeclares.h"
 #include "Physics/PhysScene_PhysX.h"
@@ -46,6 +46,7 @@ static PxFilterFlags PhysXSimFilterShader_VehicleAttach(PxFilterObjectAttributes
 	return ArcVehicles::PhysXSimFilterShader(attributes0, filterData0, attributes1, filterData1, pairFlags, constantBlock, constantBlockSize);
 }
 #endif
+
 
 void UArcVehicleEngineSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -92,6 +93,7 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USce
 	return removals > 0;
 }
 
+//Taken from PHysXSupport line 133
 #if WITH_PHYSX
 PxFilterFlags ArcVehicles::PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
@@ -126,7 +128,7 @@ PxFilterFlags ArcVehicles::PhysXSimFilterShader(PxFilterObjectAttributes attribu
 	}
 
 	// if these bodies are from the same component, use the disable table to see if we should disable collision. This case should only happen for things like skeletalmesh and destruction. The table is only created for skeletal mesh components at the moment
-#if !WITH_CHAOS && !PHYSICS_INTERFACE_LLIMMEDIATE
+#if !WITH_CHAOS
 	if (filterData0.word2 == filterData1.word2)
 	{
 		check(constantBlockSize == sizeof(FPhysSceneShaderInfo));
