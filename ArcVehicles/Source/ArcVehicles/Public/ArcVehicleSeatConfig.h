@@ -44,9 +44,18 @@ public:
 	void SetupSeatAttachment();
 	virtual void SetupSeatAttachment_Implementation();
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-		void AttachPlayerToSeat(APlayerState* Player);
-	virtual void AttachPlayerToSeat_Implementation(APlayerState* Player);
+	UFUNCTION()
+	virtual void AttachPlayerToSeat(APlayerState* Player);
+
+
+	UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName = "On Attach Player To Seat"))
+	void BP_AttachPlayerToSeat(APlayerState* Player);
+
+	UFUNCTION()
+	virtual void UnAttachPlayerFromSeat(APlayerState* Player);
+
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Unattach Player To Seat"))
+	void BP_UnAttachPlayerFromSeat(APlayerState* Player);
 
 	virtual AArcVehiclePawn* GetSeatPawn() const;
 
@@ -61,7 +70,7 @@ class ARCVEHICLES_API UArcVehicleSeatConfig_PlayerAttachment : public UArcVehicl
 	GENERATED_BODY()
 public:
 	
-	virtual void AttachPlayerToSeat_Implementation(APlayerState* Player) override;
+	virtual void AttachPlayerToSeat(APlayerState* Player) override;
 	//TODO: Animation Stuff
 
 

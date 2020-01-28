@@ -356,7 +356,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 					if (IsValid(FromSeat))
 					{
 						//remove the player from this seat.  
-						FromSeat->PlayerInSeat = nullptr;
+						FromSeat->UnAttachPlayerFromSeat(SeatChangeEvent.Player);
 					}
 
 					//Put the player into the seat		

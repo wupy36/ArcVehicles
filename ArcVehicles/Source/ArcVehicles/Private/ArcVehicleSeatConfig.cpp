@@ -31,7 +31,7 @@ void UArcVehicleSeatConfig::SetupSeatAttachment_Implementation()
 
 }
 
-void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Player)
+void UArcVehicleSeatConfig::AttachPlayerToSeat(APlayerState* Player)
 {
 	PlayerInSeat = Player;
 
@@ -54,7 +54,15 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat_Implementation(APlayerState* Play
 			
 		}
 	}
+
+	BP_AttachPlayerToSeat(Player);
 	
+}
+
+void UArcVehicleSeatConfig::UnAttachPlayerFromSeat(APlayerState* Player)
+{
+	BP_UnAttachPlayerFromSeat(Player);
+	PlayerInSeat = nullptr;	
 }
 
 AArcVehiclePawn* UArcVehicleSeatConfig::GetSeatPawn() const
@@ -72,9 +80,9 @@ bool UArcVehicleSeatConfig::IsDriverSeat() const
 	return GetVehicleOwner()->DriverSeatConfig == this;
 }
 
-void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat_Implementation(APlayerState* Player)
+void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat(APlayerState* Player)
 {
-	Super::AttachPlayerToSeat_Implementation(Player);
+	Super::AttachPlayerToSeat(Player);
 }
 
 void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
