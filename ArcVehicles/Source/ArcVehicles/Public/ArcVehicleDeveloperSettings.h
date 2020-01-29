@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DeveloperSettings.h"
+#include "Templates/SubclassOf.h"
 #include "ArcVehicleDeveloperSettings.generated.h"
 
 /**
