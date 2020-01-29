@@ -35,28 +35,27 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat(APlayerState* Player)
 {
 	PlayerInSeat = Player;
 
-	if (IsValid(Player))
+	if (IsValid(PlayerSeatComponent))
 	{
-		if (APawn* PlayerPawn = Player->GetPawn())
-		{		
+		if (APawn* PlayerPawn = Cast<APawn>(PlayerSeatComponent->GetOwner()))
+		{
 
 			USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
 			if (IsValid(SceneComponent))
-			{				
-				PlayerPawn->AttachToComponent(SceneComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSeatToComponent.SocketName);		
-				PlayerPawn->SetActorHiddenInGame(!bPlayerVisible);				
+			{
+				PlayerPawn->AttachToComponent(SceneComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSeatToComponent.SocketName);
+				PlayerPawn->SetActorHiddenInGame(!bPlayerVisible);
 			}
 			else
 			{
 				PlayerPawn->AttachToActor(GetVehicleOwner(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 				PlayerPawn->SetActorHiddenInGame(true); //If we are always attaching to the actor, just hide us
 			}
-			
+
 		}
 	}
 
 	BP_AttachPlayerToSeat(Player);
-	
 }
 
 void UArcVehicleSeatConfig::UnAttachPlayerFromSeat(APlayerState* Player)

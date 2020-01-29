@@ -360,9 +360,9 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 					}
 
 					//Put the player into the seat		
-					PlayerSeatComponent->ChangeSeats(ToSeat);
 					ToSeat->PlayerInSeat = SeatChangeEvent.Player;
 					ToSeat->PlayerSeatComponent = PlayerSeatComponent;
+					PlayerSeatComponent->ChangeSeats(ToSeat);
 
 					//a seat with a seat pawn (like the driver seat), take the controller from the player state and posses us.
 					AArcVehiclePawn* SeatPawn = ToSeat->GetSeatPawn();

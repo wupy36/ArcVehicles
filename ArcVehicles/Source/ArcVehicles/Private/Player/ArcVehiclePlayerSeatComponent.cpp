@@ -82,6 +82,13 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 	//So, we reverted the replication here because ChangeSeats stores the previous seat and changes SeatConfig itself.
 	UArcVehicleSeatConfig* CurrentSeat = SeatConfig;
 	SeatConfig = InPreviousSeatConfig;
+
+	//Make sure that on the client, we know the seat is ours.  This isn't replicated from the server but we can derive it so bandwidth savings.
+	if (IsValid(CurrentSeat))
+	{
+		CurrentSeat->PlayerSeatComponent = this;
+	}
+
 	ChangeSeats(CurrentSeat);
 }
 

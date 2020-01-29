@@ -40,7 +40,7 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Vehicle", ReplicatedUsing=OnRep_SeatConfig)
 	UArcVehicleSeatConfig* SeatConfig;
 
-	UPROPERTY()
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle")
 	UArcVehicleSeatConfig* PreviousSeatConfig;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", Replicated)
