@@ -3,6 +3,7 @@
 #include "ArcVehicles.h"
 #include "ArcVehicleSeatConfig.h"
 #include "ArcBaseVehicle.h"
+#include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "Seats/ArcVehicleSeat.h"
 #include "ArcVehicleEngineSubsystem.h"
 #include "Net/UnrealNetwork.h"
