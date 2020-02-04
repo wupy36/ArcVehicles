@@ -62,6 +62,9 @@ public:
 	
 	UFUNCTION(BlueprintPure)
 	bool IsDriverSeat() const;
+
+	virtual bool IsNameStableForNetworking() const override;
+	virtual bool IsSupportedForNetworking() const override;
 };
 
 UCLASS()

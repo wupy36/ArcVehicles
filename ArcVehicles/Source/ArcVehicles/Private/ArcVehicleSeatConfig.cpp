@@ -79,6 +79,16 @@ bool UArcVehicleSeatConfig::IsDriverSeat() const
 	return GetVehicleOwner()->DriverSeatConfig == this;
 }
 
+bool UArcVehicleSeatConfig::IsNameStableForNetworking() const
+{
+	return GetOuter()->IsNameStableForNetworking();
+}
+
+bool UArcVehicleSeatConfig::IsSupportedForNetworking() const
+{
+	return true;
+}
+
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat(APlayerState* Player)
 {
 	Super::AttachPlayerToSeat(Player);
