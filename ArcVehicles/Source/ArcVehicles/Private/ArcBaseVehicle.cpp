@@ -23,9 +23,42 @@ AArcBaseVehicle::AArcBaseVehicle()
 
 }
 
+void AArcBaseVehicle::PostInitProperties()
+{
+	Super::PostInitProperties();
+
+	
+
+	ReplicatedSeatConfigs.Empty(1 + AdditionalSeatConfigs.Num());
+
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		UArcVehicleSeatConfig* DupSeatConfig = DuplicateObject(DriverSeatConfig, this);
+		if (IsValid(DupSeatConfig))
+		{
+			DupSeatConfig->SetNetAddressable(true);
+			ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
+		}
+		
+
+		for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
+		{
+			DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
+			DupSeatConfig->SetNetAddressable(true);
+
+			ReplicatedSeatConfigs.Add(DupSeatConfig);
+		}
+	}
+	
+}
+
 void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	//DOREPLIFETIME(AArcBaseVehicle, DriverSeatConfig);
+	//DOREPLIFETIME(AArcBaseVehicle, AdditionalSeatConfigs);
+	DOREPLIFETIME(AArcBaseVehicle, ReplicatedSeatConfigs);
 }
 
 bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
@@ -91,7 +124,7 @@ void AArcBaseVehicle::SetupVehicleSeats()
 
 	for (UArcVehicleSeatConfig* SeatConfig : Seats)
 	{
-		if (SeatConfig == DriverSeatConfig)
+		if (SeatConfig == GetSeatConfig())
 		{
 			if (UArcVehicleSeatConfig_SeatPawn* PawnConfig = Cast<UArcVehicleSeatConfig_SeatPawn>(SeatConfig))
 			{
@@ -114,10 +147,12 @@ void AArcBaseVehicle::SetupSeat_Implementation(UArcVehicleSeatConfig* SeatConfig
 
 void AArcBaseVehicle::GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats)
 {
-	Seats.Reset(AdditionalSeatConfigs.Num() + 1);
+	Seats.Reset(ReplicatedSeatConfigs.Num());
 
-	Seats.Add(DriverSeatConfig);
-	Seats.Append(AdditionalSeatConfigs);
+	//Seats.Add(DriverSeatConfig);
+	//Seats.Append(AdditionalSeatConfigs);
+
+	Seats.Append(ReplicatedSeatConfigs);
 }
 
 bool AArcBaseVehicle::CanProcessSeatChange(const FArcVehicleSeatChangeEvent& SeatChange)

@@ -3,6 +3,7 @@
 #include "ArcVehicles.h"
 #include "ArcVehicleSeatConfig.h"
 #include "ArcBaseVehicle.h"
+#include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "Seats/ArcVehicleSeat.h"
 #include "ArcVehicleEngineSubsystem.h"
 #include "Net/UnrealNetwork.h"
@@ -14,6 +15,14 @@
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 {
 	
+}
+
+void UArcVehicleSeatConfig::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UArcVehicleSeatConfig, AttachSeatToComponent);
+	DOREPLIFETIME(UArcVehicleSeatConfig, bPlayerVisible);
 }
 
 bool UArcVehicleSeatConfig::IsOpenSeat() const
@@ -81,12 +90,17 @@ bool UArcVehicleSeatConfig::IsDriverSeat() const
 
 bool UArcVehicleSeatConfig::IsNameStableForNetworking() const
 {
-	return GetOuter()->IsNameStableForNetworking();
+	return bNetAddressable || Super::IsNameStableForNetworking();
 }
 
 bool UArcVehicleSeatConfig::IsSupportedForNetworking() const
 {
 	return true;
+}
+
+void UArcVehicleSeatConfig::SetNetAddressable(bool bNewNetAddressable)
+{
+	bNetAddressable = bNewNetAddressable;
 }
 
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat(APlayerState* Player)
@@ -99,6 +113,8 @@ void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawn);
+	//DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawnClass);
+	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, PlayerCharacterAttachToComponent);
 }
 
 void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn)

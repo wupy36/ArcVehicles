@@ -21,8 +21,10 @@ public:
 
 	UArcVehicleSeatConfig();
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
+
 	//Where the seat is attached to on the parent vehicle
-	UPROPERTY(EditDefaultsOnly, Category = "Attach")
+	UPROPERTY(EditAnywhere, Category = "Attach", Replicated)
 	FArcOwnerAttachmentReference AttachSeatToComponent;
 
 	UPROPERTY(VisibleInstanceOnly, Category="Seat")
@@ -31,7 +33,7 @@ public:
 	UPROPERTY()
 	UArcVehiclePlayerSeatComponent* PlayerSeatComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Character", Replicated)
 	bool bPlayerVisible;
 	
 	UFUNCTION(BlueprintPure)
@@ -65,6 +67,9 @@ public:
 
 	virtual bool IsNameStableForNetworking() const override;
 	virtual bool IsSupportedForNetworking() const override;
+	virtual void SetNetAddressable(bool bNewNetAddressable);
+
+	bool bNetAddressable;
 };
 
 UCLASS()
@@ -89,14 +94,14 @@ public:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Seat Pawn")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Seat Pawn", Replicated)
 	TSubclassOf<class AArcVehicleSeat> SeatPawnClass;
 
 	/** Property to point to the template child actor for details panel purposes */
 	//UPROPERTY(VisibleDefaultsOnly, DuplicateTransient, Category = "Seat Pawn", meta = (ShowInnerProperties))
 	//AArcVehicleSeat* SeatPawnTemplate;
 		
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character", Replicated)
 	FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
 
 	UPROPERTY(ReplicatedUsing=OnRep_SeatPawn)
