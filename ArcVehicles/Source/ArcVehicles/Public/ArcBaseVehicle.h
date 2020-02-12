@@ -98,7 +98,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config", Instanced)
 	TArray<UArcVehicleSeatConfig*> AdditionalSeatConfigs;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, Transient)
 	TArray<UArcVehicleSeatConfig*> ReplicatedSeatConfigs;
 
 private:
