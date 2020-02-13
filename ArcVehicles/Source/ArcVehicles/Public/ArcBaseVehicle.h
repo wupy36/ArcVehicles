@@ -55,6 +55,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
+	virtual UArcVehicleSeatConfig* GetDriverSeat();
 
 	virtual AArcBaseVehicle* GetOwningVehicle() override;
 	

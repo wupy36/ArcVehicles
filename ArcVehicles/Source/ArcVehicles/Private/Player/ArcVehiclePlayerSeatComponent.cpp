@@ -117,7 +117,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
-				SeatConfig->AttachPlayerToSeat(StoredPlayerState);
+ 				SeatConfig->AttachPlayerToSeat(StoredPlayerState);
 
 				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
 				{

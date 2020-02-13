@@ -29,25 +29,29 @@ void AArcBaseVehicle::PostInitProperties()
 
 	
 
-	ReplicatedSeatConfigs.Empty(1 + AdditionalSeatConfigs.Num());
-
-
-	if (GetLocalRole() == ROLE_Authority)
+	
+	//HACKHACK: Due to oddities in how Unreal Engine replicates instanced subobjects
+	//we duplicate them here.  The replicated array then syncs the objects safely to the client
+	//if (!IsNetMode(NM_Standalone))
 	{
-		UArcVehicleSeatConfig* DupSeatConfig = DuplicateObject(DriverSeatConfig, this);
-		if (IsValid(DupSeatConfig))
-		{
-			DupSeatConfig->SetNetAddressable(true);
-			ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
-		}
-		
+		ReplicatedSeatConfigs.Empty(1 + AdditionalSeatConfigs.Num());
 
-		for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
+		if (GetLocalRole() == ROLE_Authority)
 		{
-			DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
-			DupSeatConfig->SetNetAddressable(true);
+			UArcVehicleSeatConfig* DupSeatConfig = DuplicateObject(DriverSeatConfig, this);
+			if (IsValid(DupSeatConfig))
+			{
+				DupSeatConfig->SetNetAddressable(true);
+				ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
+			}
 
-			ReplicatedSeatConfigs.Add(DupSeatConfig);
+			for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
+			{
+				DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
+				DupSeatConfig->SetNetAddressable(true);
+
+				ReplicatedSeatConfigs.Add(DupSeatConfig);
+			}
 		}
 	}
 	
@@ -109,6 +113,16 @@ void AArcBaseVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig()
 {
+	return GetDriverSeat();
+}
+
+UArcVehicleSeatConfig* AArcBaseVehicle::GetDriverSeat()
+{
+	if (ReplicatedSeatConfigs.Num() > 0)
+	{
+		return ReplicatedSeatConfigs[0];
+	}
+
 	return DriverSeatConfig;
 }
 
@@ -124,7 +138,7 @@ void AArcBaseVehicle::SetupVehicleSeats()
 
 	for (UArcVehicleSeatConfig* SeatConfig : Seats)
 	{
-		if (SeatConfig == GetSeatConfig())
+		if (SeatConfig == GetDriverSeat())
 		{
 			if (UArcVehicleSeatConfig_SeatPawn* PawnConfig = Cast<UArcVehicleSeatConfig_SeatPawn>(SeatConfig))
 			{
@@ -147,12 +161,17 @@ void AArcBaseVehicle::SetupSeat_Implementation(UArcVehicleSeatConfig* SeatConfig
 
 void AArcBaseVehicle::GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats)
 {
-	Seats.Reset(ReplicatedSeatConfigs.Num());
-
-	//Seats.Add(DriverSeatConfig);
-	//Seats.Append(AdditionalSeatConfigs);
-
-	Seats.Append(ReplicatedSeatConfigs);
+	if (ReplicatedSeatConfigs.Num() > 0)
+	{
+		Seats.Reset(ReplicatedSeatConfigs.Num());
+		Seats.Append(ReplicatedSeatConfigs);
+	}
+	else
+	{
+		Seats.Reset(AdditionalSeatConfigs.Num() + 1);
+		Seats.Add(DriverSeatConfig);
+		Seats.Append(AdditionalSeatConfigs);
+	}	
 }
 
 bool AArcBaseVehicle::CanProcessSeatChange(const FArcVehicleSeatChangeEvent& SeatChange)

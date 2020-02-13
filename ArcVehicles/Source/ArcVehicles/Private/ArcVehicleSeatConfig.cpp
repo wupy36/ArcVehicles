@@ -85,7 +85,7 @@ AArcVehiclePawn* UArcVehicleSeatConfig::GetSeatPawn() const
 
 bool UArcVehicleSeatConfig::IsDriverSeat() const
 {
-	return GetVehicleOwner()->DriverSeatConfig == this;
+	return GetVehicleOwner()->GetDriverSeat() == this;
 }
 
 bool UArcVehicleSeatConfig::IsNameStableForNetworking() const
@@ -201,11 +201,10 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 }
 
 AArcVehiclePawn* UArcVehicleSeatConfig_SeatPawn::GetSeatPawn() const
-{
-	AArcVehiclePawn* Pawn = Super::GetSeatPawn();
-	if (IsValid(SeatPawn))
+{	
+	if (!IsValid(SeatPawn))
 	{
-		return Pawn;
+		return Super::GetSeatPawn();
 	}
 
 	return SeatPawn;
