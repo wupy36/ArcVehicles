@@ -289,6 +289,13 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			continue;
 		}
 
+		//If the controller doesn't have a player pawn, then we also have a problem
+		//Once again, we can ignore this case in shipping, but in development we should let the developer know.  
+		if (!ensure(IsValid(SeatChangeEvent.Player->GetPawn())))
+		{
+			continue;
+		}
+
 		//PROCESSING SEAT CHANGES
 		//Seat Changes are processed in a sequential way.  Firstly, we find the actual seats that the player wants to go to.
 		//The seats can be nullptr.  There are fail conditions if seats are nullptr and there is some intent
