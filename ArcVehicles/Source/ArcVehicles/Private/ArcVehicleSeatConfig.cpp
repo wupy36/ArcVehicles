@@ -108,6 +108,12 @@ void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat(APlayerState* Pl
 	Super::AttachPlayerToSeat(Player);
 }
 
+UArcVehicleSeatConfig_SeatPawn::UArcVehicleSeatConfig_SeatPawn()
+	: Super()
+{
+	bResetControlRotationOnEnter = true;
+}
+
 void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
@@ -115,6 +121,7 @@ void UArcVehicleSeatConfig_SeatPawn::GetLifetimeReplicatedProps(TArray<class FLi
 	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawn);
 	//DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, SeatPawnClass);
 	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, PlayerCharacterAttachToComponent);
+	DOREPLIFETIME(UArcVehicleSeatConfig_SeatPawn, bResetControlRotationOnEnter);
 }
 
 void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn)
@@ -198,6 +205,18 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 	}
 
 	OnRep_SeatPawn(nullptr);
+}
+
+void UArcVehicleSeatConfig_SeatPawn::AttachPlayerToSeat(APlayerState* Player)
+{
+	Super::AttachPlayerToSeat(Player);
+	if (bResetControlRotationOnEnter)
+	{
+		if (AController* Controller = Cast<AController>(Player->GetPawn()->GetController()))
+		{
+			Controller->SetControlRotation(FRotator::ZeroRotator);
+		}
+	}
 }
 
 AArcVehiclePawn* UArcVehicleSeatConfig_SeatPawn::GetSeatPawn() const

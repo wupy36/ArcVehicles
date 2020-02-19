@@ -104,6 +104,12 @@ void AArcBaseVehicle::Tick(float DeltaTime)
 
 }
 
+void AArcBaseVehicle::Restart()
+{
+	Super::Restart();
+	
+}
+
 // Called to bind functionality to input
 void AArcBaseVehicle::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

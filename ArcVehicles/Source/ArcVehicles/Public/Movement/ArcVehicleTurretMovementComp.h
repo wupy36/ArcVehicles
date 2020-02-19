@@ -6,6 +6,37 @@
 #include "GameFramework/PawnMovementComponent.h"
 #include "ArcVehicleTurretMovementComp.generated.h"
 
+USTRUCT()
+struct FArcVehicleTurretMovementPostPhysicsTickFunction : public FTickFunction
+{
+	GENERATED_USTRUCT_BODY()
+
+		class UArcVehicleTurretMovementComp* Target;
+
+	/**
+	* Abstract function actually execute the tick.
+	* @param DeltaTime - frame time to advance, in seconds
+	* @param TickType - kind of tick for this frame
+	* @param CurrentThread - thread we are executing on, useful to pass along as new tasks are created
+	* @param MyCompletionGraphEvent - completion event for this task. Useful for holding the completion of this task until certain child tasks are complete.
+	**/
+	virtual void ExecuteTick(float DeltaTime, enum ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent) override;
+
+	/** Abstract function to describe this tick. Used to print messages about illegal cycles in the dependency graph **/
+	virtual FString DiagnosticMessage() override;
+	/** Function used to describe this tick for active tick reporting. **/
+	virtual FName DiagnosticContext(bool bDetailed) override;
+};
+
+template<>
+struct TStructOpsTypeTraits<FArcVehicleTurretMovementPostPhysicsTickFunction> : public TStructOpsTypeTraitsBase2<FArcVehicleTurretMovementPostPhysicsTickFunction>
+{
+	enum
+	{
+		WithCopy = false
+	};
+};
+
 /**
  * 
  */
@@ -21,6 +52,9 @@ public:
 	/** Applies rotation to UpdatedComponent. */
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
 	//End UActorComponent Interface
+
+	/** Tick function called after physics (sync scene) has finished simulation, before cloth */
+	virtual void PostPhysicsTickComponent(float DeltaTime, FArcVehicleTurretMovementPostPhysicsTickFunction& ThisTickFunction);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret Movement (Rotation Settings)")
 	bool bIgnoreBaseRotation;
@@ -46,10 +80,18 @@ public:
 
 	void CheckForUpdatedBase();
 
+	void UpdateBasedMovement(float DeltaTime);
+
 protected:
 
 	FQuat OldBaseQuat;
+	FVector OldBaseLocation;
 
 	UPROPERTY()
 	USceneComponent* CurrentBase;
+
+private:
+	/** Post-physics tick function for this character */
+	UPROPERTY()
+		struct FArcVehicleTurretMovementPostPhysicsTickFunction PostPhysicsTickFunction;
 };

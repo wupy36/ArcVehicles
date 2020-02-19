@@ -15,6 +15,11 @@ UArcVehicleTurretMovementComp::UArcVehicleTurretMovementComp(const FObjectInitia
 	OldBaseQuat = FQuat::Identity;
 	RotationRate = FRotator(360.0f, 360.0f, 0.0f);
 	CurrentBase = nullptr;
+
+	PostPhysicsTickFunction.bCanEverTick = true;
+	PostPhysicsTickFunction.bStartWithTickEnabled = true;
+	PostPhysicsTickFunction.SetTickFunctionEnable(true);
+	PostPhysicsTickFunction.TickGroup = TG_PostPhysics;
 }
 
 void UArcVehicleTurretMovementComp::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
@@ -36,51 +41,7 @@ void UArcVehicleTurretMovementComp::TickComponent(float DeltaTime, enum ELevelTi
 
 	if (const AController* Controller = PawnOwner->GetController())
 	{
-		const bool bLocallyControlled = PawnOwner->IsLocallyControlled() && GetNetMode() == NM_Client;
-
-		FQuat DeltaQuat = FQuat::Identity;
-
-		if(USceneComponent* BaseComponent = GetParentAttachedBase())
-		{			
-			FQuat NewBaseQuat = BaseComponent->GetComponentQuat();
-
-			const bool bRotationChanged = !OldBaseQuat.Equals(NewBaseQuat, 1e-8f);
-
-			if (bRotationChanged && !bIgnoreBaseRotation)
-			{
-				DeltaQuat = NewBaseQuat * OldBaseQuat.Inverse();
-
-				FQuat FinalQuat = UpdatedComponent->GetComponentQuat();
-
-				const FQuat PawnOldQuat = UpdatedComponent->GetComponentQuat();
-				const FQuat TargetQuat = DeltaQuat * FinalQuat;
-
-				FRotator TargetRot(TargetQuat);
-				PawnOwner->FaceRotation(TargetRot, 0.0f);
-
-				FinalQuat = UpdatedComponent->GetComponentQuat();
-
-				if (PawnOldQuat.Equals(FinalQuat, 1e-6f))
-				{
-					TargetRot.Pitch = 0.f;
-					TargetRot.Roll = 0.f;
-					MoveUpdatedComponent(FVector::ZeroVector, TargetRot, false);
-					FinalQuat = UpdatedComponent->GetComponentQuat();
-				}
-				
-				if (IsValid(PawnOwner->Controller))
-				{
-					const FQuat PawnDeltaRotation = FinalQuat * PawnOldQuat.Inverse();
-					FRotator FinalRotation = FinalQuat.Rotator();
-					UpdateBasedRotation(FinalRotation, PawnDeltaRotation.Rotator());
-					FinalQuat = UpdatedComponent->GetComponentQuat();
-				}
-
-				
-			}
-			
-			OldBaseQuat = BaseComponent->GetComponentQuat();
-		}
+		const bool bLocallyControlled = PawnOwner->IsLocallyControlled() && GetNetMode() == NM_Client;		
 		
 		FRotator CurrentRotation = UpdatedComponent->GetComponentRotation();
 		FRotator DeltaRotation = GetDeltaRotation(DeltaTime);
@@ -125,6 +86,11 @@ void UArcVehicleTurretMovementComp::TickComponent(float DeltaTime, enum ELevelTi
 			MoveUpdatedComponent(FVector::ZeroVector, DesiredRotation, /*bSweep*/ false);
 		}		
 	}
+}
+
+void UArcVehicleTurretMovementComp::PostPhysicsTickComponent(float DeltaTime, FArcVehicleTurretMovementPostPhysicsTickFunction& ThisTickFunction)
+{
+	UpdateBasedMovement(DeltaTime);
 }
 
 USceneComponent* UArcVehicleTurretMovementComp::GetParentAttachedBase()
@@ -248,4 +214,75 @@ void UArcVehicleTurretMovementComp::CheckForUpdatedBase()
 		CurrentBase = GetParentAttachedBase();
 		ArcVehicleMovement::AddTickDependency(PrimaryComponentTick, CurrentBase);
 	}
+}
+
+void UArcVehicleTurretMovementComp::UpdateBasedMovement(float DeltaTime)
+{
+	FQuat DeltaQuat = FQuat::Identity;
+
+	if (USceneComponent* BaseComponent = GetParentAttachedBase())
+	{
+		FQuat NewBaseQuat = BaseComponent->GetComponentQuat();
+		FVector NewBaseLocation = BaseComponent->GetComponentLocation();
+
+		const bool bRotationChanged = !OldBaseQuat.Equals(NewBaseQuat, 1e-8f);
+		const bool bLocationChanged = OldBaseLocation != NewBaseLocation;
+
+		if (bRotationChanged && !bIgnoreBaseRotation)
+		{
+			DeltaQuat = NewBaseQuat * OldBaseQuat.Inverse();
+			if (bLocationChanged)
+			{
+				FQuat FinalQuat = UpdatedComponent->GetComponentQuat();
+
+				const FQuat PawnOldQuat = UpdatedComponent->GetComponentQuat();
+				const FQuat TargetQuat = DeltaQuat * FinalQuat;
+
+				FRotator TargetRot(TargetQuat);
+				PawnOwner->FaceRotation(TargetRot, 0.0f);
+
+				FinalQuat = UpdatedComponent->GetComponentQuat();
+
+				if (PawnOldQuat.Equals(FinalQuat, 1e-6f))
+				{
+					MoveUpdatedComponent(FVector::ZeroVector, TargetRot, false);
+					FinalQuat = UpdatedComponent->GetComponentQuat();
+				}
+
+				if (IsValid(PawnOwner->Controller))
+				{
+					const FQuat PawnDeltaRotation = FinalQuat * PawnOldQuat.Inverse();
+					FRotator FinalRotation = FinalQuat.Rotator();
+					UpdateBasedRotation(FinalRotation, PawnDeltaRotation.Rotator());
+					FinalQuat = UpdatedComponent->GetComponentQuat();
+				}
+			}
+		}
+
+		OldBaseQuat = BaseComponent->GetComponentQuat();
+		OldBaseLocation = BaseComponent->GetComponentLocation();
+	}
+}
+
+void FArcVehicleTurretMovementPostPhysicsTickFunction::ExecuteTick(float DeltaTime, enum ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent)
+{
+	FActorComponentTickFunction::ExecuteTickHelper(Target, /*bTickInEditor=*/ false, DeltaTime, TickType, [this](float DilatedTime)
+		{
+			Target->PostPhysicsTickComponent(DilatedTime, *this);
+		});
+}
+
+FString FArcVehicleTurretMovementPostPhysicsTickFunction::DiagnosticMessage()
+{
+	return Target->GetFullName() + TEXT("[FArcVehicleTurretMovementPostPhysicsTickFunction::PostPhysicsTick]");
+}
+
+FName FArcVehicleTurretMovementPostPhysicsTickFunction::DiagnosticContext(bool bDetailed)
+{
+	if (bDetailed)
+	{
+		return FName(*FString::Printf(TEXT("ArcVehicleTurretMovementPostPhysicsTick/%s"), *GetFullNameSafe(Target)));
+	}
+
+	return FName(TEXT("ArcVehicleTurretMovementPostPhysicsTick"));
 }
