@@ -37,7 +37,7 @@ void UArcVehiclePlayerSeatComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	
+
 }
 
 void UArcVehiclePlayerSeatComponent::OnRegister()
@@ -65,7 +65,7 @@ void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 	if (PreviousSeatConfig == nullptr && IsValid(SeatConfig))
 	{
 		SeatChangeType = EArcVehicleSeatChangeType::EnterVehicle;
-		
+
 	}
 	//We've swapped seats
 	if (IsValid(PreviousSeatConfig) && IsValid(SeatConfig))
@@ -82,7 +82,7 @@ void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 	OnSeatChangeEvent(SeatChangeType);
 
 	//Inform the vehicle of this seat change event on both client and server
-	
+
 	AArcBaseVehicle* Vehicle = nullptr;
 	if (IsValid(SeatConfig))
 	{
@@ -139,10 +139,10 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
- 				if (GetOwnerRole() == ROLE_Authority)
+				if (GetOwnerRole() == ROLE_Authority)
 				{
-					SeatConfig->AttachPlayerToSeat(StoredPlayerState);					
-				}	
+					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
+				}
 
 				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
 				{
@@ -155,7 +155,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
 					OwnerChar->GetCharacterMovement()->DisableMovement();
 					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
-					
+
 				}
 			}
 		}
@@ -167,6 +167,26 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				//Reset the player.  If they are invisible, make them visible
 				OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 				OwnerPawn->SetActorHiddenInGame(false);
+			}
+
+			//Enable player movement
+			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+			{
+				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
+				if (GetOwnerRole() == ROLE_Authority)
+				{
+					OwnerChar->GetCharacterMovement()->FlushServerMoves();
+					OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
+					OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
+				}
+			}
+
+
+			//Find them an exit point.  This has to be done after we re-enable movement otherwise we don't get teleported
+			if (GetOwnerRole() == ROLE_Authority)
+			{
 
 				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
 				if (IsValid(PreviousSeatConfig))
@@ -178,7 +198,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					if (ExitLocations.Num() > 0)
 					{
 						FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(OwnerPawn->GetSimpleCollisionCylinderExtent());
-						
+
 						const ECollisionChannel CollisionChannel = OwnerPawn->GetRootComponent()->GetCollisionObjectType();
 
 						FCollisionQueryParams QueryParams;
@@ -201,23 +221,11 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 						}
 					}
 				}
-				FHitResult HitResult;
-				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, true, &HitResult, ETeleportType::ResetPhysics);	
-			}		
 
-			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
-			{
-				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
-				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
-				if (GetOwnerRole() == ROLE_Authority)
-				{
-					OwnerChar->GetCharacterMovement()->FlushServerMoves();
-					OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
-					OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
-				}
+				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
 			}
 
+			//Allow them to collide with everything
 			UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
 			TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(PreviousSeatConfig->GetVehicleOwner());
 			TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
@@ -228,9 +236,9 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				{
 					EngSub->RemoveIgnoreBetween(VC, SC);
 				}
-			}			
+			}
 		}
 	}
-	
+
 }
 
