@@ -327,6 +327,27 @@ void AArcBaseVehicle::GetAllVehicleActors(TArray<AActor*>& VehicleActors)
 	GetAttachedActors(VehicleActors, false);	
 }
 
+void AArcBaseVehicle::NotifyPlayerSeatChangeEvent_Implementation(APlayerState* Player, UArcVehicleSeatConfig* ToSeat, UArcVehicleSeatConfig* FromSeat, EArcVehicleSeatChangeType SeatChangeEvent)
+{
+	Super::NotifyPlayerSeatChangeEvent_Implementation(Player, ToSeat, FromSeat, SeatChangeEvent);
+
+	if (UArcVehicleSeatConfig_SeatPawn* ToSeatPawn = Cast<UArcVehicleSeatConfig_SeatPawn>(ToSeat))
+	{
+		if (IsValid(ToSeatPawn->SeatPawn) && ToSeatPawn != GetDriverSeat())
+		{
+			ToSeatPawn->SeatPawn->NotifyPlayerSeatChangeEvent(Player, ToSeat, FromSeat, SeatChangeEvent);
+		}
+	}
+
+	if (UArcVehicleSeatConfig_SeatPawn* FromSeatPawn = Cast<UArcVehicleSeatConfig_SeatPawn>(FromSeat))
+	{
+		if (IsValid(FromSeatPawn->SeatPawn) && FromSeatPawn != GetDriverSeat())
+		{
+			FromSeatPawn->SeatPawn->NotifyPlayerSeatChangeEvent(Player, ToSeat, FromSeat, SeatChangeEvent);
+		}
+	}
+}
+
 void AArcBaseVehicle::ProcessSeatChangeQueue()
 {
 	TArray<UArcVehicleSeatConfig*> AllSeats;

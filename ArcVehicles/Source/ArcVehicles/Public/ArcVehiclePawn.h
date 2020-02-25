@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "ArcVehicleTypes.h"
 #include "ArcVehiclePawn.generated.h"
 
 class UArcVehicleSeatConfig;
@@ -39,4 +40,7 @@ public:
 	virtual AArcBaseVehicle* GetOwningVehicle();
 
 
+	UFUNCTION(BlueprintNativeEvent)
+	void NotifyPlayerSeatChangeEvent(APlayerState* Player, UArcVehicleSeatConfig* ToSeat, UArcVehicleSeatConfig* FromSeat, EArcVehicleSeatChangeType SeatChangeEvent);
+	virtual void NotifyPlayerSeatChangeEvent_Implementation(APlayerState* Player, UArcVehicleSeatConfig* ToSeat, UArcVehicleSeatConfig* FromSeat, EArcVehicleSeatChangeType SeatChangeEvent);
 };

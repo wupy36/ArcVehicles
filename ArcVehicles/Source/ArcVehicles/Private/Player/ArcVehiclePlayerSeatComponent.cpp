@@ -59,22 +59,44 @@ void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 	PreviousSeatConfig = SeatConfig;
 	SeatConfig = NewSeat;
 
+	EArcVehicleSeatChangeType SeatChangeType = EArcVehicleSeatChangeType::Invalid;
+
 	//We've entered a vehicle
 	if (PreviousSeatConfig == nullptr && IsValid(SeatConfig))
 	{
-		OnSeatChangeEvent(EArcVehicleSeatChangeType::EnterVehicle);
+		SeatChangeType = EArcVehicleSeatChangeType::EnterVehicle;
+		
 	}
 	//We've swapped seats
 	if (IsValid(PreviousSeatConfig) && IsValid(SeatConfig))
 	{
-		OnSeatChangeEvent(EArcVehicleSeatChangeType::SwitchSeats);
+		SeatChangeType = EArcVehicleSeatChangeType::SwitchSeats;
 	}
 	//We've exited the vehicle
 	if (IsValid(PreviousSeatConfig) && SeatConfig == nullptr)
 	{
-		OnSeatChangeEvent(EArcVehicleSeatChangeType::ExitVehicle);
+		SeatChangeType = EArcVehicleSeatChangeType::ExitVehicle;
 	}
 	//There is no 4th case (when both seats are nullptr.  That shouldn't happen.  If it does... ignore it.
+
+	OnSeatChangeEvent(SeatChangeType);
+
+	//Inform the vehicle of this seat change event on both client and server
+	
+	AArcBaseVehicle* Vehicle = nullptr;
+	if (IsValid(SeatConfig))
+	{
+		Vehicle = SeatConfig->GetVehicleOwner();
+	}
+	else if (IsValid(PreviousSeatConfig))
+	{
+		Vehicle = PreviousSeatConfig->GetVehicleOwner();
+	}
+
+	if (IsValid(Vehicle))
+	{
+		Vehicle->NotifyPlayerSeatChangeEvent(StoredPlayerState, SeatConfig, PreviousSeatConfig, SeatChangeType);
+	}
 }
 
 void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig)
@@ -194,11 +216,8 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				{
 					EngSub->RemoveIgnoreBetween(VC, SC);
 				}
-			}
-
-			
+			}			
 		}
-
 	}
 	
 }

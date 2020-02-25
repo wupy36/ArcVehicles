@@ -52,3 +52,8 @@ AArcBaseVehicle* AArcVehiclePawn::GetOwningVehicle()
 	return GetSeatConfig()->GetVehicleOwner();
 }
 
+void AArcVehiclePawn::NotifyPlayerSeatChangeEvent_Implementation(APlayerState* Player, UArcVehicleSeatConfig* ToSeat, UArcVehicleSeatConfig* FromSeat, EArcVehicleSeatChangeType SeatChangeEvent)
+{
+
+}
+

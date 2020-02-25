@@ -20,3 +20,12 @@ public:
 
 	class USceneComponent* GetSceneComponent(AActor* OwnerActor);
 };
+
+UENUM(BlueprintType)
+enum class EArcVehicleSeatChangeType : uint8
+{
+	Invalid,
+	EnterVehicle,
+	ExitVehicle,
+	SwitchSeats
+};

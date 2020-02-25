@@ -96,8 +96,9 @@ public:
 	virtual void GetSortedExitPoints(FTransform InputLocation, TArray<FTransform>& OutTransformArray) const;
 
 	virtual void PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent);
-
 	virtual void GetAllVehicleActors(TArray<AActor*>& VehicleActors);
+
+	virtual void NotifyPlayerSeatChangeEvent_Implementation(APlayerState* Player, UArcVehicleSeatConfig* ToSeat, UArcVehicleSeatConfig* FromSeat, EArcVehicleSeatChangeType SeatChangeEvent);
 
 public:
 

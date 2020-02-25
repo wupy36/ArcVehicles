@@ -9,13 +9,7 @@
 class UArcVehicleSeatConfig;
 class APlayerState;
 
-UENUM(BlueprintType)
-enum class EArcVehicleSeatChangeType : uint8
-{
-	EnterVehicle,
-	ExitVehicle,
-	SwitchSeats
-};
+
 
 UCLASS( ClassGroup=(ArcVehicles), meta=(BlueprintSpawnableComponent), Blueprintable )
 class ARCVEHICLES_API UArcVehiclePlayerSeatComponent : public UActorComponent
