@@ -88,7 +88,16 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ArcVehicles|Vehicle")
 	bool IsValidSeatIndex(int32 InSeatIndex) const;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ArcVehicles|Vehicle")
+	FTransform GetNearestExitTransform(FTransform InputLocation);
+	virtual FTransform GetNearestExitTransform_Implementation(FTransform InputLocation);
+
+	UFUNCTION(BlueprintPure, Category = "ArcVehicles|Vehicle")
+	virtual void GetSortedExitPoints(FTransform InputLocation, TArray<FTransform>& OutTransformArray) const;
+
 	virtual void PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent);
+
+	virtual void GetAllVehicleActors(TArray<AActor*>& VehicleActors);
 
 public:
 

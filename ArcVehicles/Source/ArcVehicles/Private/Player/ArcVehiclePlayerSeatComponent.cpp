@@ -117,32 +117,72 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
- 				SeatConfig->AttachPlayerToSeat(StoredPlayerState);
-
-				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+ 				if (GetOwnerRole() == ROLE_Authority)
 				{
-					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
-					OwnerChar->GetCharacterMovement()->DisableMovement();
-					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
-				}			
+					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
+
+					if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+					{
+						OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+						OwnerChar->GetCharacterMovement()->DisableMovement();
+						OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
+					}
+				}				
 			}
 		}
 
 		if (SeatChangeType == EArcVehicleSeatChangeType::ExitVehicle)
 		{
-			//Reset the player.  If they are invisible, make them visible
-			OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-			OwnerPawn->SetActorHiddenInGame(false);
-			
-
-			FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
-			if (IsValid(PreviousSeatConfig))
+			if (GetOwnerRole() == ROLE_Authority)
 			{
-				ExitLoc = PreviousSeatConfig->GetVehicleOwner()->GetActorLocation() + FVector(0, 0, 300);
-			}
-			
+				//Reset the player.  If they are invisible, make them visible
+				OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+				OwnerPawn->SetActorHiddenInGame(false);
 
-			OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false);
+
+				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
+				if (IsValid(PreviousSeatConfig))
+				{
+					TArray<FTransform> ExitLocations;
+					PreviousSeatConfig->GetVehicleOwner()->GetSortedExitPoints(GetOwner()->GetActorTransform(), ExitLocations);
+
+					//TODO: Trace to this exit point
+					if (ExitLocations.Num() > 0)
+					{
+						FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(OwnerPawn->GetSimpleCollisionCylinderExtent());
+						
+						const ECollisionChannel CollisionChannel = OwnerPawn->GetRootComponent()->GetCollisionObjectType();
+
+						FCollisionQueryParams QueryParams;
+						TArray<AActor*> Actors;
+						PreviousSeatConfig->GetVehicleOwner()->GetAllVehicleActors(Actors);
+						OwnerPawn->GetAttachedActors(Actors, false);
+						Actors.Add(OwnerPawn);
+
+						QueryParams.AddIgnoredActors(Actors);
+
+						for (const FTransform& TestLocation : ExitLocations)
+						{
+							FHitResult Hit;
+							bool bBlockingHit = GetWorld()->LineTraceSingleByChannel(Hit, OwnerPawn->GetActorLocation(), TestLocation.GetLocation(), ECC_Pawn, QueryParams);
+							if (!bBlockingHit)
+							{
+								ExitLoc = TestLocation.GetLocation();
+								break;
+							}
+						}
+					}
+				}
+				FHitResult HitResult;
+				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, true, &HitResult, ETeleportType::ResetPhysics);
+
+				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+				{
+					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+					OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
+				}
+			}		
 
 			UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
 			TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(PreviousSeatConfig->GetVehicleOwner());
@@ -156,12 +196,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				}
 			}
 
-			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
-			{
-				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
-				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
-			}
+			
 		}
 
 	}

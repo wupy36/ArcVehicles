@@ -10,6 +10,7 @@
 #include "ArcVehicleDeveloperSettings.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/ActorChannel.h"
+#include "ArcVehicleExitPoint.h"
 
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
 int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
@@ -270,12 +271,60 @@ bool AArcBaseVehicle::IsValidSeatIndex(int32 InSeatIndex) const
 	return true;
 }
 
+FTransform AArcBaseVehicle::GetNearestExitTransform_Implementation(FTransform InputLocation)
+{
+	//Get all of the exit positions
+	TArray<FTransform> ExitLocations;
+	GetSortedExitPoints(InputLocation, ExitLocations);
+
+	if (ExitLocations.Num() > 0)
+	{
+		return ExitLocations[0];
+	}
+	else
+	{
+		FVector ExitLoc = GetActorLocation() + FVector(0, 0, 300);
+		return FTransform(FRotator(), ExitLoc);
+	}
+}
+
+void AArcBaseVehicle::GetSortedExitPoints(FTransform InputLocation, TArray<FTransform>& OutTransformArray) const
+{
+	TInlineComponentArray<UArcVehicleExitPoint*> ExitComponents(this, true);
+	OutTransformArray.Reset(ExitComponents.Num());
+
+	//Get the exit transforms
+	for (UArcVehicleExitPoint* ExitPoint : ExitComponents)
+	{
+		if (IsValid(ExitPoint))
+		{
+			OutTransformArray.Add(ExitPoint->GetComponentTransform());
+		}
+	}
+
+	//Sort the array
+	OutTransformArray.Sort([InputLocation](const FTransform& A, const FTransform& B)
+		{
+			return FVector::DistSquared(A.GetLocation(), InputLocation.GetLocation()) > FVector::DistSquared(B.GetLocation(), InputLocation.GetLocation());
+		});
+}
+
 void AArcBaseVehicle::PushSeatChangeEvent(const FArcVehicleSeatChangeEvent& SeatChangeEvent)
 {
 	if (CanProcessSeatChange(SeatChangeEvent))
 	{
 		SeatChangeQueue.Push(SeatChangeEvent);
 	}	
+}
+
+void AArcBaseVehicle::GetAllVehicleActors(TArray<AActor*>& VehicleActors)
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	VehicleActors.Reset(AllSeats.Num());
+	VehicleActors.Add(this);
+	GetAttachedActors(VehicleActors, false);	
 }
 
 void AArcBaseVehicle::ProcessSeatChangeQueue()
