@@ -56,7 +56,10 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+
 	virtual UArcVehicleSeatConfig* GetSeatConfig() override;
+
+	UFUNCTION(BlueprintPure, Category = "ArcVehicles|Vehicle")
 	virtual UArcVehicleSeatConfig* GetDriverSeat();
 
 	virtual AArcBaseVehicle* GetOwningVehicle() override;
@@ -68,6 +71,8 @@ public:
 	void SetupSeat(UArcVehicleSeatConfig* SeatConfig);
 	virtual void SetupSeat_Implementation(UArcVehicleSeatConfig* SeatConfig);
 
+	
+	UFUNCTION(BlueprintCallable, Category = "ArcVehicles|Vehicle")
 	virtual void GetAllSeats(TArray<UArcVehicleSeatConfig*>& Seats);
 
 	virtual bool CanProcessSeatChange(const FArcVehicleSeatChangeEvent& SeatChange);
@@ -104,11 +109,11 @@ public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
 	//
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config", Instanced)
+	UPROPERTY(EditAnywhere, Category="Config", Instanced)
 	UArcVehicleSeatConfig* DriverSeatConfig;
 
 	//Additional Seat Configurations for this vehicle
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Config", Instanced)
+	UPROPERTY(EditAnywhere, Category = "Config", Instanced)
 	TArray<UArcVehicleSeatConfig*> AdditionalSeatConfigs;
 
 	UPROPERTY(Replicated, Transient)
