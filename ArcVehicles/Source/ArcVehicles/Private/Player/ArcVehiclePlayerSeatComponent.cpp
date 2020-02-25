@@ -141,15 +141,22 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 
  				if (GetOwnerRole() == ROLE_Authority)
 				{
-					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
+					SeatConfig->AttachPlayerToSeat(StoredPlayerState);					
+				}	
 
-					if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+				{
+					if (GetOwnerRole() == ROLE_Authority)
 					{
-						OwnerChar->GetCharacterMovement()->StopMovementImmediately();
-						OwnerChar->GetCharacterMovement()->DisableMovement();
-						OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
+						OwnerChar->GetCharacterMovement()->FlushServerMoves();
+						OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
+						OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
 					}
-				}				
+					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+					OwnerChar->GetCharacterMovement()->DisableMovement();
+					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(false);
+					
+				}
 			}
 		}
 
@@ -160,7 +167,6 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				//Reset the player.  If they are invisible, make them visible
 				OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 				OwnerPawn->SetActorHiddenInGame(false);
-
 
 				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
 				if (IsValid(PreviousSeatConfig))
@@ -196,15 +202,21 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 				FHitResult HitResult;
-				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, true, &HitResult, ETeleportType::ResetPhysics);
-
-				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
-				{
-					OwnerChar->GetCharacterMovement()->StopMovementImmediately();
-					OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
-					OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
-				}
+				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, true, &HitResult, ETeleportType::ResetPhysics);	
 			}		
+
+			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
+			{
+				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
+				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
+				if (GetOwnerRole() == ROLE_Authority)
+				{
+					OwnerChar->GetCharacterMovement()->FlushServerMoves();
+					OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
+					OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
+				}
+			}
 
 			UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
 			TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(PreviousSeatConfig->GetVehicleOwner());
