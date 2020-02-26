@@ -394,7 +394,7 @@ void UArcVehiclePlayerSeatComponent::GenerateDebugStrings(TArray<FString>& OutSt
 	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(SeatConfig)));
 	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(PreviousSeatConfig)));
 
-	OutStrings.Add(FString::Printf(TEXT("Last Seat Change Event: %s"), *UEnum::GetValueAsString<EArcVehicleSeatChangeType>(DebugLastSeatChangeType)));
+	OutStrings.Add(FString::Printf(TEXT("Last Seat Change Event: %s"), *UEnum::GetValueAsString(DebugLastSeatChangeType)));
 
 	OutStrings.Add(FString::Printf(TEXT("PlayerPawn: NetOwner (%s)"),
 		IsValid(GetOwner()->GetOwner()) ? *GetOwner()->GetOwner()->GetName() : TEXT("null")

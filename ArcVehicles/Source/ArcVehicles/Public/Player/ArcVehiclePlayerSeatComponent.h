@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ArcVehicleTypes.h"
 #include "ArcVehiclePlayerSeatComponent.generated.h"
 
 class UArcVehicleSeatConfig;
@@ -49,7 +50,7 @@ public:
 
 
 
-	static void OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos);
+	static void OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const class FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos);
 
 
 	/**
@@ -60,7 +61,7 @@ public:
 	* @param YL - Height of the current font
 	* @param YPos - Y position on Canvas. YPos += YL, gives position to draw text for next debug line.
 	*/
-	virtual void DisplayDebug(class UCanvas* Canvas, const FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos);
+	virtual void DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos);
 
 	virtual void GenerateDebugStrings(TArray<FString>& OutStrings);
 
