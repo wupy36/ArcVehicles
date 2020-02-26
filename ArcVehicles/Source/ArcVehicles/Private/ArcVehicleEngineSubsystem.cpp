@@ -63,6 +63,10 @@ bool UArcVehicleEngineSubsystem::IgnoreBetween(USceneComponent* ObjA, USceneComp
 	{
 		return false;
 	}
+	if (HasIgnoreBetween(ObjA, ObjB))
+	{
+		return true;
+	}
 
 	FIgnorePair IgnorePair;
 	IgnorePair.ObjA = ObjA;
@@ -91,6 +95,22 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USce
 	}
 
 	return removals > 0;
+}
+
+bool UArcVehicleEngineSubsystem::HasIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB)
+{
+	for (int i = 0; i < IgnoreComponents.Num(); i++)
+	{
+		FIgnorePair& IP = IgnoreComponents[i];
+
+		if ((IP.ObjA == ObjA || IP.ObjA == ObjB)
+			&& (IP.ObjB == ObjA || IP.ObjB == ObjB))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 //Taken from PHysXSupport line 133

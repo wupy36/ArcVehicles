@@ -31,6 +31,7 @@ public:
 	const TArray<FIgnorePair>& GetIgnoreComponents() { return IgnoreComponents; };
 
 	bool IgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
-
 	bool RemoveIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
+
+	bool HasIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
 };
