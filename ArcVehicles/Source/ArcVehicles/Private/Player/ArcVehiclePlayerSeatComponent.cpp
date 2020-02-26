@@ -8,6 +8,11 @@
 #include "Components/PrimitiveComponent.h"
 #include "EngineMinimal.h"
 #include "Engine/Engine.h"
+#include "GameFramework/PlayerState.h"
+
+#include "GameFramework/HUD.h"
+#include "Engine/Canvas.h"
+#include "DisplayDebugHelpers.h"
 
 
 // Sets default values for this component's properties
@@ -97,6 +102,8 @@ void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 	{
 		Vehicle->NotifyPlayerSeatChangeEvent(StoredPlayerState, SeatConfig, PreviousSeatConfig, SeatChangeType);
 	}
+
+	DebugLastSeatChangeType = SeatChangeType;
 }
 
 void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig)
@@ -109,9 +116,17 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 	if (IsValid(CurrentSeat))
 	{
 		CurrentSeat->PlayerSeatComponent = this;
-	}
+		CurrentSeat->PlayerInSeat = StoredPlayerState;
+	}	
 
 	ChangeSeats(CurrentSeat);
+
+	//Clean out the player seat component on the client.  The seat change code handles this on the server
+	if (IsValid(InPreviousSeatConfig))
+	{
+		InPreviousSeatConfig->PlayerInSeat = nullptr;
+		InPreviousSeatConfig->PlayerSeatComponent = nullptr;
+	}
 }
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
@@ -240,5 +255,192 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		}
 	}
 
+}
+
+namespace ArcVehiclesDebug
+{
+	struct FDebugTargetInfo
+	{
+		FDebugTargetInfo()
+		{
+
+		}
+
+		TWeakObjectPtr<UWorld> TargetWorld;
+		TWeakObjectPtr<UArcVehiclePlayerSeatComponent> LastDebugTarget;
+	};
+
+	TArray<FDebugTargetInfo> InventoryDebugInfoList;
+
+	FDebugTargetInfo* GetDebugTargetInfo(UWorld* World)
+	{
+		FDebugTargetInfo* TargetInfo = nullptr;
+		for (FDebugTargetInfo& Info : InventoryDebugInfoList)
+		{
+			if (Info.TargetWorld.Get() == World)
+			{
+				TargetInfo = &Info;
+				break;
+			}
+		}
+		if (TargetInfo == nullptr)
+		{
+			TargetInfo = &InventoryDebugInfoList[InventoryDebugInfoList.AddDefaulted()];
+			TargetInfo->TargetWorld = World;
+		}
+
+		return TargetInfo;
+	}
+
+	UArcVehiclePlayerSeatComponent* GetDebugTarget(FDebugTargetInfo* TargetInfo)
+	{
+		//Return the Target if we have one
+		if (UArcVehiclePlayerSeatComponent* Inv = TargetInfo->LastDebugTarget.Get())
+		{
+			return Inv;
+		}
+
+		//Find one
+		for (TObjectIterator<UArcVehiclePlayerSeatComponent> It; It; ++It)
+		{
+			if (UArcVehiclePlayerSeatComponent* Inv = *It)
+			{
+				if (Inv->GetWorld() == TargetInfo->TargetWorld.Get() && MakeWeakObjectPtr(Inv).Get())
+				{
+					TargetInfo->LastDebugTarget = Inv;
+
+					//Default to local player
+					if (APawn* Pawn = Cast<APawn>(Inv->GetOwner()))
+					{
+						if (Pawn->IsLocallyControlled())
+						{
+							break;
+						}
+					}
+				}
+			}
+		}
+		return TargetInfo->LastDebugTarget.Get();
+	}
+
+	FString PrintDebugSeatInfo(UArcVehicleSeatConfig* SeatConfig)
+	{
+		if (!IsValid(SeatConfig))
+		{
+			return TEXT("null");
+		}
+
+		return FString::Printf(TEXT("Seat (%s) Owner(%s), IsDriver(%s) PlayerInSeat (%s), PlayerCompInSeat (%s) Vehicle (%s) VehicleOwner (%s)"),
+			*SeatConfig->GetClass()->GetAuthoredName(),
+			*SeatConfig->GetVehicleOwner()->GetName(),
+			(SeatConfig->GetVehicleOwner()->GetDriverSeat() == SeatConfig) ? TEXT("true") : TEXT("false"),
+			IsValid(SeatConfig->PlayerInSeat) ? *SeatConfig->PlayerInSeat->GetPlayerName() : TEXT("null"),
+			IsValid(SeatConfig->PlayerSeatComponent) ? *SeatConfig->PlayerSeatComponent->GetName() : TEXT("null"),
+			IsValid(SeatConfig->GetVehicleOwner()) ? *SeatConfig->GetVehicleOwner()->GetName() : TEXT("null"),
+			IsValid(SeatConfig->GetVehicleOwner()->GetOwner()) ? *SeatConfig->GetVehicleOwner()->GetOwner()->GetName() : TEXT("null")
+			);
+	}
+}
+
+void UArcVehiclePlayerSeatComponent::OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos)
+{
+	if (DisplayInfo.IsDisplayOn(TEXT("VehicleSeat")))
+	{
+		UWorld* World = HUD->GetWorld();
+		ArcVehiclesDebug::FDebugTargetInfo* TargetInfo = ArcVehiclesDebug::GetDebugTargetInfo(World);
+
+		if (UArcVehiclePlayerSeatComponent* Comp = ArcVehiclesDebug::GetDebugTarget(TargetInfo))
+		{
+			TArray<FName> LocalDisplayNames;
+			LocalDisplayNames.Add(TEXT("CVehicleSeat"));
+			FDebugDisplayInfo LocalDisplayInfo(LocalDisplayNames, TArray<FName>());
+
+			Comp->DisplayDebug(Canvas, LocalDisplayInfo, YL, YPos);
+		}
+	}
+}
+
+void UArcVehiclePlayerSeatComponent::DisplayDebug(class UCanvas* Canvas, const FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos)
+{
+	if (DebugDisplay.IsDisplayOn(TEXT("CVehicleSeat")))
+	{
+		FDisplayDebugManager& DisplayDebugManager = Canvas->DisplayDebugManager;
+		TArray<FString> ClientStrings;
+		GenerateDebugStrings(ClientStrings);
+
+		DisplayDebugManager.DrawString(TEXT("---CLIENT SEAT STATE---"));
+		for (const FString& String : ClientStrings)
+		{
+			DisplayDebugManager.DrawString(String, 15);
+		}
+
+		DisplayDebugManager.DrawString(TEXT("---SERVER SEAT STATE---"));
+		for (const FString& String : ServerDebugStrings)
+		{
+			DisplayDebugManager.DrawString(String, 15);
+		}
+
+		//Ask for the server strings.  This is very chatty, but it's debug.
+		if (GetOwnerRole() != ROLE_Authority && ShouldRequestDebugStrings())
+		{
+			ServerPrintDebug_Request();
+		}
+		
+	}
+}
+
+void UArcVehiclePlayerSeatComponent::GenerateDebugStrings(TArray<FString>& OutStrings)
+{
+	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(SeatConfig)));
+	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(PreviousSeatConfig)));
+
+	OutStrings.Add(FString::Printf(TEXT("Last Seat Change Event: %s"), *UEnum::GetValueAsString<EArcVehicleSeatChangeType>(DebugLastSeatChangeType)));
+
+	OutStrings.Add(FString::Printf(TEXT("PlayerPawn: NetOwner (%s)"),
+		IsValid(GetOwner()->GetOwner()) ? *GetOwner()->GetOwner()->GetName() : TEXT("null")
+	));
+}
+
+void UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Implementation()
+{
+	TArray<FString> ServerStrings;
+	GenerateDebugStrings(ServerStrings);
+	
+	ClientPrintDebug_Response(ServerStrings);
+}
+
+bool UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Validate()
+{
+	return true;
+}
+
+void UArcVehiclePlayerSeatComponent::ClientPrintDebug_Response_Implementation(const TArray<FString>& Strings)
+{
+	ServerDebugStrings = Strings;
+}
+
+bool UArcVehiclePlayerSeatComponent::ClientPrintDebug_Response_Validate(const TArray<FString>& Strings)
+{
+	return true;
+}
+
+bool UArcVehiclePlayerSeatComponent::ShouldRequestDebugStrings() const
+{
+	// This implements basic throttling so that debug strings can't be sent more than once a second to the server
+	const double MinTimeBetweenClientDebugSends = 1.f;
+	static double LastSendTime = 0.f;
+
+	double CurrentTime = FPlatformTime::Seconds();
+	bool ShouldSend = (CurrentTime - LastSendTime) > MinTimeBetweenClientDebugSends;
+	if (ShouldSend)
+	{
+		LastSendTime = CurrentTime;
+	}
+	return ShouldSend;
+}
+
+namespace InventoryDebug
+{
+	FDelegateHandle DebugHandle = AHUD::OnShowDebugInfo.AddStatic(&UArcVehiclePlayerSeatComponent::OnShowDebugInfo);
 }
 

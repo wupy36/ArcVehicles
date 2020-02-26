@@ -71,6 +71,7 @@ void UArcVehicleSeatConfig::UnAttachPlayerFromSeat(APlayerState* Player)
 {
 	BP_UnAttachPlayerFromSeat(Player);
 	PlayerInSeat = nullptr;	
+	PlayerSeatComponent = nullptr;
 }
 
 AArcVehiclePawn* UArcVehicleSeatConfig::GetSeatPawn() const

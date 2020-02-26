@@ -43,7 +43,11 @@ void AArcVehiclePawn::BecomePossessedByPlayer(APlayerState* InPlayerState)
 	}
 	if (AController* OtherController = Cast<AController>(InPlayerState->GetOwner()))
 	{
+		APawn* PreviousPawn = OtherController->GetPawn();
+
 		OtherController->Possess(this);
+
+		PreviousPawn->SetOwner(OtherController);
 	}
 }
 

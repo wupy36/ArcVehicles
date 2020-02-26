@@ -516,8 +516,15 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 						{
 							if (SeatedPlayerController->GetPawn() != PlayerPawn)
 							{
+								//Store the pawn so we can restore net ownership after we change possession.
+								APawn* PreviouslyOwnedPawn = SeatedPlayerController->GetPawn();
+
 								SeatedPlayerController->Possess(PlayerStateComp->StoredPlayerPawn);
-								PlayerStateComp->StoredPlayerPawn = nullptr;
+
+								PreviouslyOwnedPawn->SetOwner(SeatedPlayerController);
+								PreviouslyOwnedPawn->ForceNetUpdate();
+
+								PlayerStateComp->StoredPlayerPawn = nullptr;								
 							}							
 						}
 					}
@@ -537,10 +544,18 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 				{		
 					PlayerSeatComponent->ChangeSeats(nullptr);
 					FromSeat->PlayerInSeat = nullptr;
+					FromSeat->PlayerSeatComponent = nullptr;
 
 					if (AController* SeatedPlayerController = Cast<AController>(SeatChangeEvent.Player->GetOwner()))
 					{
+						APawn* PreviouslyOwnedPawn = SeatedPlayerController->GetPawn();
+
 						SeatedPlayerController->Possess(PlayerStateComp->StoredPlayerPawn);
+
+						//Restore ownership of this pawn back to the person who was owning it for replication purposes.
+						PreviouslyOwnedPawn->SetOwner(SeatedPlayerController);
+						PreviouslyOwnedPawn->ForceNetUpdate();
+
 						PlayerStateComp->StoredPlayerPawn = nullptr;
 					}
 					
