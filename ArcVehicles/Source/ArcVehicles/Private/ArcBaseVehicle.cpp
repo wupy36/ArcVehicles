@@ -305,7 +305,7 @@ void AArcBaseVehicle::GetSortedExitPoints(FTransform InputLocation, TArray<FTran
 	//Sort the array
 	OutTransformArray.Sort([InputLocation](const FTransform& A, const FTransform& B)
 		{
-			return FVector::DistSquared(A.GetLocation(), InputLocation.GetLocation()) > FVector::DistSquared(B.GetLocation(), InputLocation.GetLocation());
+			return FVector::DistSquared(A.GetLocation(), InputLocation.GetLocation()) < FVector::DistSquared(B.GetLocation(), InputLocation.GetLocation());
 		});
 }
 
