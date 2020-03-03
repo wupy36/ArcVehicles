@@ -23,7 +23,7 @@ UArcVehiclePlayerSeatComponent::UArcVehiclePlayerSeatComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	SetIsReplicatedByDefault(true);
 
-
+	RelativeTransformRestorer = FArcVehicleScopedRelativeTransformRestoration(nullptr);
 	// ...
 }
 
@@ -56,6 +56,8 @@ void UArcVehiclePlayerSeatComponent::OnRegister()
 			StoredPlayerState = OwnerPawn->GetPlayerState();
 		}
 	}
+
+	RelativeTransformRestorer = FArcVehicleScopedRelativeTransformRestoration(GetOwner());
 }
 
 void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
@@ -131,8 +133,6 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
 {
-	FArcVehicleScopedRelativeTransformRestoration RelativeTransformRestoration(GetOwner());
-
 	if (IsValid(PreviousSeatConfig))
 	{
 		PreviousSeatConfig->UnAttachPlayerFromSeat(StoredPlayerState);
@@ -143,7 +143,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		if (SeatChangeType == EArcVehicleSeatChangeType::EnterVehicle || SeatChangeType == EArcVehicleSeatChangeType::SwitchSeats)
 		{
 			if (IsValid(SeatConfig))
-			{				
+			{
 				UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
 				TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(SeatConfig->GetVehicleOwner());
 				TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
@@ -166,6 +166,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					if (GetOwnerRole() == ROLE_Authority)
 					{
 						OwnerChar->GetCharacterMovement()->FlushServerMoves();
+						OwnerChar->ForceNetUpdate();
 						OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
 						OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
 					}
@@ -178,7 +179,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		}
 
 		if (SeatChangeType == EArcVehicleSeatChangeType::ExitVehicle)
-		{			
+		{
 			//Enable player movement
 			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
 			{
@@ -190,6 +191,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					OwnerChar->GetCharacterMovement()->FlushServerMoves();
 					OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
 					OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
+					OwnerChar->ForceNetUpdate();
 				}
 			}
 
@@ -257,6 +259,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		}
 	}
 
+	RelativeTransformRestorer.Restore();
 }
 
 namespace ArcVehiclesDebug

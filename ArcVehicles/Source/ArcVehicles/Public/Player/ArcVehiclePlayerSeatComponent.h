@@ -12,12 +12,12 @@ class APlayerState;
 
 
 
-UCLASS( ClassGroup=(ArcVehicles), meta=(BlueprintSpawnableComponent), Blueprintable )
+UCLASS(ClassGroup = (ArcVehicles), meta = (BlueprintSpawnableComponent), Blueprintable)
 class ARCVEHICLES_API UArcVehiclePlayerSeatComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	// Sets default values for this component's properties
 	UArcVehiclePlayerSeatComponent();
 
@@ -27,25 +27,27 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	virtual void OnRegister() override;
 
 	virtual void ChangeSeats(UArcVehicleSeatConfig* NewSeat);
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category="Vehicle", ReplicatedUsing=OnRep_SeatConfig)
-	UArcVehicleSeatConfig* SeatConfig;
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", ReplicatedUsing = OnRep_SeatConfig)
+		UArcVehicleSeatConfig* SeatConfig;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle")
-	UArcVehicleSeatConfig* PreviousSeatConfig;
+		UArcVehicleSeatConfig* PreviousSeatConfig;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", Replicated)
-	APlayerState* StoredPlayerState;
+		APlayerState* StoredPlayerState;
+
+	FArcVehicleScopedRelativeTransformRestoration RelativeTransformRestorer;
 
 	UFUNCTION()
-	virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
+		virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
 
 	UFUNCTION(BlueprintNativeEvent)
-	void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
+		void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
 	void OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType);
 
 
@@ -54,7 +56,7 @@ public:
 
 
 	/**
-	* Draw important variables on canvas. 
+	* Draw important variables on canvas.
 	*
 	* @param Canvas - Canvas to draw on
 	* @param DebugDisplay - Contains information about what debug data to display
@@ -67,12 +69,12 @@ public:
 
 	/** Ask the server to send ability system debug information back to the client, via ClientPrintDebug_Response  */
 	UFUNCTION(Server, reliable, WithValidation)
-	void ServerPrintDebug_Request();
+		void ServerPrintDebug_Request();
 	void ServerPrintDebug_Request_Implementation();
 	bool ServerPrintDebug_Request_Validate();
 
 	UFUNCTION(Client, reliable)
-	void ClientPrintDebug_Response(const TArray<FString>& Strings);
+		void ClientPrintDebug_Response(const TArray<FString>& Strings);
 	void ClientPrintDebug_Response_Implementation(const TArray<FString>& Strings);
 	bool ClientPrintDebug_Response_Validate(const TArray<FString>& Strings);
 
@@ -84,5 +86,5 @@ public:
 
 protected:
 	UPROPERTY()
-	TMap<UPrimitiveComponent*, TEnumAsByte<ECollisionResponse>> PreviousVehicleCollisionResponses;
+		TMap<UPrimitiveComponent*, TEnumAsByte<ECollisionResponse>> PreviousVehicleCollisionResponses;
 };

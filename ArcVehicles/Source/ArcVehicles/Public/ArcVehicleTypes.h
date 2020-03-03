@@ -31,8 +31,11 @@ enum class EArcVehicleSeatChangeType : uint8
 
 struct ARCVEHICLES_API FArcVehicleScopedRelativeTransformRestoration
 {
+	FArcVehicleScopedRelativeTransformRestoration();
 	FArcVehicleScopedRelativeTransformRestoration(AActor* InActor);
 	~FArcVehicleScopedRelativeTransformRestoration();
+
+	void Restore();
 
 	TWeakObjectPtr<class AActor> OwnerActor;
 	TMap<TWeakObjectPtr<class USceneComponent>, FTransform> ComponentTransformMap;

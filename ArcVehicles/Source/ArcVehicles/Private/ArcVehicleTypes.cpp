@@ -36,7 +36,17 @@ FArcVehicleScopedRelativeTransformRestoration::FArcVehicleScopedRelativeTransfor
 	}
 }
 
+FArcVehicleScopedRelativeTransformRestoration::FArcVehicleScopedRelativeTransformRestoration()
+{
+
+}
+
 FArcVehicleScopedRelativeTransformRestoration::~FArcVehicleScopedRelativeTransformRestoration()
+{
+	Restore();
+}
+
+void FArcVehicleScopedRelativeTransformRestoration::Restore()
 {
 	for (const auto& KVP : ComponentTransformMap)
 	{
