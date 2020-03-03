@@ -19,3 +19,33 @@ class USceneComponent* FArcOwnerAttachmentReference::GetSceneComponent(AActor* O
 	return nullptr;
 }
 
+FArcVehicleScopedRelativeTransformRestoration::FArcVehicleScopedRelativeTransformRestoration(AActor* InActor)
+{
+	if (IsValid(InActor))
+	{
+		TInlineComponentArray<USceneComponent*> Components(InActor);
+		for (USceneComponent* Comp : Components)
+		{
+			if (Comp == InActor->GetRootComponent())
+			{
+				continue;
+			}
+
+			ComponentTransformMap.Add(Comp, Comp->GetRelativeTransform());
+		}
+	}
+}
+
+FArcVehicleScopedRelativeTransformRestoration::~FArcVehicleScopedRelativeTransformRestoration()
+{
+	for (const auto& KVP : ComponentTransformMap)
+	{
+		USceneComponent* Comp = KVP.Key.Get();
+		const FTransform& Transform = KVP.Value;
+
+		if (IsValid(Comp))
+		{
+			Comp->SetRelativeTransform(Transform, false, nullptr, ETeleportType::TeleportPhysics);
+		}
+	}
+}

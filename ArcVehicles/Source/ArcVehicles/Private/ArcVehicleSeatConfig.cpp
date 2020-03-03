@@ -14,7 +14,7 @@
 
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 {
-	
+
 }
 
 void UArcVehicleSeatConfig::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
@@ -52,7 +52,9 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat(APlayerState* Player)
 			USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
 			if (IsValid(SceneComponent))
 			{
-				PlayerPawn->AttachToComponent(SceneComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale, AttachSeatToComponent.SocketName);
+				FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
+				PlayerPawn->AttachToComponent(SceneComponent, AttachmentRules, AttachSeatToComponent.SocketName);
+
 				PlayerPawn->SetActorHiddenInGame(!bPlayerVisible);
 			}
 			else
@@ -70,7 +72,7 @@ void UArcVehicleSeatConfig::AttachPlayerToSeat(APlayerState* Player)
 void UArcVehicleSeatConfig::UnAttachPlayerFromSeat(APlayerState* Player)
 {
 	BP_UnAttachPlayerFromSeat(Player);
-	PlayerInSeat = nullptr;	
+	PlayerInSeat = nullptr;
 	PlayerSeatComponent = nullptr;
 }
 
@@ -82,6 +84,32 @@ AArcVehiclePawn* UArcVehicleSeatConfig::GetSeatPawn() const
 	}
 
 	return nullptr;
+}
+
+FTransform UArcVehicleSeatConfig::GetSeatAttachTransform_World()
+{
+	USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
+	if (IsValid(SceneComponent))
+	{
+		return SceneComponent->GetSocketTransform(AttachSeatToComponent.SocketName, RTS_World);
+	}
+	else
+	{
+		return GetVehicleOwner()->GetActorTransform();
+	}
+}
+
+FTransform UArcVehicleSeatConfig::GetSawnAttachTrasnform_Relative()
+{
+	USceneComponent* SceneComponent = AttachSeatToComponent.GetSceneComponent(GetVehicleOwner());
+	if (IsValid(SceneComponent))
+	{
+		return SceneComponent->GetSocketTransform(AttachSeatToComponent.SocketName, RTS_Actor);
+	}
+	else
+	{
+		return GetVehicleOwner()->GetActorTransform();
+	}
 }
 
 bool UArcVehicleSeatConfig::IsDriverSeat() const
@@ -144,7 +172,7 @@ void UArcVehicleSeatConfig_SeatPawn::OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn
 	{
 		for (UPrimitiveComponent* SC : SeatPawnComponents)
 		{
-			EngSub->IgnoreBetween(VC, SC);			
+			EngSub->IgnoreBetween(VC, SC);
 		}
 	}
 }
@@ -165,7 +193,7 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 	}
 
 	AArcBaseVehicle* OwnerVehicle = GetVehicleOwner();
-	check(IsValid(OwnerVehicle));	
+	check(IsValid(OwnerVehicle));
 
 	USceneComponent* SC = AttachSeatToComponent.GetSceneComponent(OwnerVehicle);
 	FTransform TForm = FTransform::Identity;
@@ -189,11 +217,11 @@ void UArcVehicleSeatConfig_SeatPawn::SetupSeatAttachment_Implementation()
 	{
 		return;
 	}
-	
+
 
 	SeatPawn = NewSeatPawn;
 	if (IsValid(SeatPawn))
-	{		
+	{
 		if (IsValid(SC))
 		{
 
@@ -221,7 +249,7 @@ void UArcVehicleSeatConfig_SeatPawn::AttachPlayerToSeat(APlayerState* Player)
 }
 
 AArcVehiclePawn* UArcVehicleSeatConfig_SeatPawn::GetSeatPawn() const
-{	
+{
 	if (!IsValid(SeatPawn))
 	{
 		return Super::GetSeatPawn();

@@ -117,7 +117,7 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 	{
 		CurrentSeat->PlayerSeatComponent = this;
 		CurrentSeat->PlayerInSeat = StoredPlayerState;
-	}	
+	}
 
 	ChangeSeats(CurrentSeat);
 
@@ -131,6 +131,8 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
 {
+	FArcVehicleScopedRelativeTransformRestoration RelativeTransformRestoration(GetOwner());
+
 	if (IsValid(PreviousSeatConfig))
 	{
 		PreviousSeatConfig->UnAttachPlayerFromSeat(StoredPlayerState);
@@ -141,7 +143,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		if (SeatChangeType == EArcVehicleSeatChangeType::EnterVehicle || SeatChangeType == EArcVehicleSeatChangeType::SwitchSeats)
 		{
 			if (IsValid(SeatConfig))
-			{
+			{				
 				UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
 				TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(SeatConfig->GetVehicleOwner());
 				TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
@@ -154,7 +156,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
-				if (GetOwnerRole() == ROLE_Authority)
+				//if (GetOwnerRole() == ROLE_Authority)
 				{
 					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
 				}
@@ -176,14 +178,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		}
 
 		if (SeatChangeType == EArcVehicleSeatChangeType::ExitVehicle)
-		{
-			if (GetOwnerRole() == ROLE_Authority)
-			{
-				//Reset the player.  If they are invisible, make them visible
-				OwnerPawn->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-				OwnerPawn->SetActorHiddenInGame(false);
-			}
-
+		{			
 			//Enable player movement
 			if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
 			{
@@ -202,7 +197,6 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 			//Find them an exit point.  This has to be done after we re-enable movement otherwise we don't get teleported
 			if (GetOwnerRole() == ROLE_Authority)
 			{
-
 				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
 				if (IsValid(PreviousSeatConfig))
 				{
@@ -237,7 +231,15 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
-				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false, nullptr, ETeleportType::ResetPhysics);
+				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false, nullptr, ETeleportType::TeleportPhysics);
+			}
+
+			if (GetOwnerRole() == ROLE_Authority)
+			{
+				//Reset the player.  If they are invisible, make them visible
+				FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
+				OwnerPawn->DetachFromActor(DetachmentRules);
+				OwnerPawn->SetActorHiddenInGame(false);
 			}
 
 			//Allow them to collide with everything
@@ -338,7 +340,7 @@ namespace ArcVehiclesDebug
 			IsValid(SeatConfig->PlayerSeatComponent) ? *SeatConfig->PlayerSeatComponent->GetName() : TEXT("null"),
 			IsValid(SeatConfig->GetVehicleOwner()) ? *SeatConfig->GetVehicleOwner()->GetName() : TEXT("null"),
 			IsValid(SeatConfig->GetVehicleOwner()->GetOwner()) ? *SeatConfig->GetVehicleOwner()->GetOwner()->GetName() : TEXT("null")
-			);
+		);
 	}
 }
 
@@ -385,7 +387,7 @@ void UArcVehiclePlayerSeatComponent::DisplayDebug(class UCanvas* Canvas, const F
 		{
 			ServerPrintDebug_Request();
 		}
-		
+
 	}
 }
 
@@ -405,7 +407,7 @@ void UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Implementation()
 {
 	TArray<FString> ServerStrings;
 	GenerateDebugStrings(ServerStrings);
-	
+
 	ClientPrintDebug_Response(ServerStrings);
 }
 

@@ -11,7 +11,7 @@ class UArcVehiclePlayerSeatComponent;
 class AArcVehiclePawn;
 
 /**
- * 
+ *
  */
 UCLASS(EditInlineNew, Abstract, Blueprintable, BlueprintType)
 class ARCVEHICLES_API UArcVehicleSeatConfig : public UObject
@@ -25,45 +25,48 @@ public:
 
 	//Where the seat is attached to on the parent vehicle
 	UPROPERTY(EditAnywhere, Category = "Attach", Replicated)
-	FArcOwnerAttachmentReference AttachSeatToComponent;
+		FArcOwnerAttachmentReference AttachSeatToComponent;
 
-	UPROPERTY(VisibleInstanceOnly, Category="Seat")
-	APlayerState* PlayerInSeat;
+	UPROPERTY(VisibleInstanceOnly, Category = "Seat")
+		APlayerState* PlayerInSeat;
 
 	UPROPERTY()
-	UArcVehiclePlayerSeatComponent* PlayerSeatComponent;
+		UArcVehiclePlayerSeatComponent* PlayerSeatComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player Character", Replicated)
-	bool bPlayerVisible;
-	
-	UFUNCTION(BlueprintPure)
-	virtual bool IsOpenSeat() const;
+		bool bPlayerVisible;
 
 	UFUNCTION(BlueprintPure)
-	class AArcBaseVehicle* GetVehicleOwner() const;
+		virtual bool IsOpenSeat() const;
+
+	UFUNCTION(BlueprintPure)
+		class AArcBaseVehicle* GetVehicleOwner() const;
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void SetupSeatAttachment();
+		void SetupSeatAttachment();
 	virtual void SetupSeatAttachment_Implementation();
 
 	UFUNCTION()
-	virtual void AttachPlayerToSeat(APlayerState* Player);
+		virtual void AttachPlayerToSeat(APlayerState* Player);
 
 
-	UFUNCTION(BlueprintImplementableEvent, meta=(DisplayName = "On Attach Player To Seat"))
-	void BP_AttachPlayerToSeat(APlayerState* Player);
+	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Attach Player To Seat"))
+		void BP_AttachPlayerToSeat(APlayerState* Player);
 
 	UFUNCTION()
-	virtual void UnAttachPlayerFromSeat(APlayerState* Player);
+		virtual void UnAttachPlayerFromSeat(APlayerState* Player);
 
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "On Unattach Player To Seat"))
-	void BP_UnAttachPlayerFromSeat(APlayerState* Player);
+		void BP_UnAttachPlayerFromSeat(APlayerState* Player);
 
 	virtual AArcVehiclePawn* GetSeatPawn() const;
 
-	
+	virtual FTransform GetSeatAttachTransform_World();
+	virtual FTransform GetSawnAttachTrasnform_Relative();
+
+
 	UFUNCTION(BlueprintPure)
-	bool IsDriverSeat() const;
+		bool IsDriverSeat() const;
 
 	virtual bool IsNameStableForNetworking() const override;
 	virtual bool IsSupportedForNetworking() const override;
@@ -77,12 +80,12 @@ class ARCVEHICLES_API UArcVehicleSeatConfig_PlayerAttachment : public UArcVehicl
 {
 	GENERATED_BODY()
 public:
-	
+
 	virtual void AttachPlayerToSeat(APlayerState* Player) override;
 	//TODO: Animation Stuff
 
 
-	
+
 };
 
 
@@ -92,27 +95,27 @@ class ARCVEHICLES_API UArcVehicleSeatConfig_SeatPawn : public UArcVehicleSeatCon
 	GENERATED_BODY()
 public:
 	UArcVehicleSeatConfig_SeatPawn();
-	
+
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Seat Pawn", Replicated)
-	TSubclassOf<class AArcVehicleSeat> SeatPawnClass;
+		TSubclassOf<class AArcVehicleSeat> SeatPawnClass;
 
 	/** Property to point to the template child actor for details panel purposes */
 	//UPROPERTY(VisibleDefaultsOnly, DuplicateTransient, Category = "Seat Pawn", meta = (ShowInnerProperties))
 	//AArcVehicleSeat* SeatPawnTemplate;
-		
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character", Replicated)
-	FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character", Replicated)
-	bool bResetControlRotationOnEnter;
+		FArcOwnerAttachmentReference PlayerCharacterAttachToComponent;
 
-	UPROPERTY(ReplicatedUsing=OnRep_SeatPawn)
-	AArcVehiclePawn* SeatPawn;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Player Character", Replicated)
+		bool bResetControlRotationOnEnter;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SeatPawn)
+		AArcVehiclePawn* SeatPawn;
 
 	UFUNCTION()
-	void OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn);
+		void OnRep_SeatPawn(AArcVehiclePawn* OldSeatPawn);
 
 	virtual void SetupSeatAttachment_Implementation() override;
 	virtual void AttachPlayerToSeat(APlayerState* Player) override;

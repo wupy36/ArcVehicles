@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "ArcVehicleTypes.generated.h"
 
-
 USTRUCT(BlueprintType)
 struct ARCVEHICLES_API FArcOwnerAttachmentReference
 {
@@ -28,4 +27,13 @@ enum class EArcVehicleSeatChangeType : uint8
 	EnterVehicle,
 	ExitVehicle,
 	SwitchSeats
+};
+
+struct ARCVEHICLES_API FArcVehicleScopedRelativeTransformRestoration
+{
+	FArcVehicleScopedRelativeTransformRestoration(AActor* InActor);
+	~FArcVehicleScopedRelativeTransformRestoration();
+
+	TWeakObjectPtr<class AActor> OwnerActor;
+	TMap<TWeakObjectPtr<class USceneComponent>, FTransform> ComponentTransformMap;
 };
