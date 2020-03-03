@@ -236,6 +236,9 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				OwnerPawn->SetActorLocationAndRotation(ExitLoc, FQuat::Identity, false, nullptr, ETeleportType::TeleportPhysics);
 			}
 
+			//Force the player to right itself
+			OwnerPawn->SetActorRotation(FQuat::Identity);
+
 			if (GetOwnerRole() == ROLE_Authority)
 			{
 				//Reset the player.  If they are invisible, make them visible
