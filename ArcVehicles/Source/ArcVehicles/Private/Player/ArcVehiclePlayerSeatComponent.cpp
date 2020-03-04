@@ -204,24 +204,10 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					TArray<FTransform> ExitLocations;
 					PreviousSeatConfig->GetVehicleOwner()->GetSortedExitPoints(GetOwner()->GetActorTransform(), ExitLocations);
 
-					//TODO: Trace to this exit point
 					if (ExitLocations.Num() > 0)
-					{
-						FCollisionShape CollisionShape = FCollisionShape::MakeCapsule(OwnerPawn->GetSimpleCollisionCylinderExtent());
-
-						const ECollisionChannel CollisionChannel = OwnerPawn->GetRootComponent()->GetCollisionObjectType();
-
-						FCollisionQueryParams QueryParams;
-						TArray<AActor*> Actors;
-						PreviousSeatConfig->GetVehicleOwner()->GetAllVehicleActors(Actors);
-						OwnerPawn->GetAttachedActors(Actors, false);
-						Actors.Add(OwnerPawn);
-
-						QueryParams.AddIgnoredActors(Actors);
-
+					{		
 						for (const FTransform& TestLocation : ExitLocations)
 						{
-
 							FVector TestLocVec = TestLocation.GetLocation();
 							if (GetWorld()->FindTeleportSpot(GetOwner(), TestLocVec, TestLocation.GetRotation().Rotator()))
 							{
