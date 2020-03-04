@@ -221,13 +221,13 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 
 						for (const FTransform& TestLocation : ExitLocations)
 						{
-							FHitResult Hit;
-							bool bBlockingHit = GetWorld()->LineTraceSingleByChannel(Hit, OwnerPawn->GetActorLocation(), TestLocation.GetLocation(), ECC_Pawn, QueryParams);
-							if (!bBlockingHit)
+
+							FVector TestLocVec = TestLocation.GetLocation();
+							if (GetWorld()->FindTeleportSpot(GetOwner(), TestLocVec, TestLocation.GetRotation().Rotator()))
 							{
-								ExitLoc = TestLocation.GetLocation();
+								ExitLoc = TestLocVec;
 								break;
-							}
+							}							
 						}
 					}
 				}
