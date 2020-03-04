@@ -156,7 +156,6 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 					}
 				}
 
-				//if (GetOwnerRole() == ROLE_Authority)
 				{
 					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
 				}
@@ -239,7 +238,6 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 			//Force the player to right itself
 			OwnerPawn->SetActorRotation(FQuat::Identity);
 
-			if (GetOwnerRole() == ROLE_Authority)
 			{
 				//Reset the player.  If they are invisible, make them visible
 				FDetachmentTransformRules DetachmentRules(EDetachmentRule::KeepWorld, true);
