@@ -50,7 +50,7 @@ public:
 		void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
 	void OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType);
 
-
+	virtual void SetIgnoreBetween(AActor* OtherActor);
 
 	static void OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const class FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos);
 

@@ -81,6 +81,14 @@ bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FO
 	return bWroteSomething;
 }
 
+void AArcBaseVehicle::PostNetReceivePhysicState()
+{
+	//Ensure that the seat ignores are set up.
+	UpdatePysicsIgnores();
+
+	Super::PostNetReceivePhysicState();
+}
+
 // Called when the game starts or when spawned
 void AArcBaseVehicle::BeginPlay()
 {
@@ -567,6 +575,20 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 				}
 			}			
 			 
+		}
+	}
+}
+
+void AArcBaseVehicle::UpdatePysicsIgnores()
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	for (UArcVehicleSeatConfig* SeatConfig : AllSeats)
+	{
+		if (IsValid(SeatConfig->PlayerSeatComponent))
+		{
+			SeatConfig->PlayerSeatComponent->SetIgnoreBetween(this);
 		}
 	}
 }

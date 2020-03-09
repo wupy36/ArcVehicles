@@ -43,6 +43,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
 	virtual bool ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags);
 
+	virtual void PostNetReceivePhysicState() override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -120,10 +122,11 @@ public:
 	TArray<UArcVehicleSeatConfig*> ReplicatedSeatConfigs;
 
 private:
-
 	void ProcessSeatChangeQueue();
-
+		
 	UPROPERTY()
 	TArray<FArcVehicleSeatChangeEvent> SeatChangeQueue;
 
+protected:
+	virtual void UpdatePysicsIgnores();
 };

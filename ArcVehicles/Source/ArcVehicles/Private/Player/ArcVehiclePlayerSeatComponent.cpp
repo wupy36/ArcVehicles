@@ -144,17 +144,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 		{
 			if (IsValid(SeatConfig))
 			{
-				UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
-				TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(SeatConfig->GetVehicleOwner());
-				TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(OwnerPawn);
-
-				for (UPrimitiveComponent* VC : VehicleComponents)
-				{
-					for (UPrimitiveComponent* SC : OwnerPawnComponents)
-					{
-						EngSub->IgnoreBetween(VC, SC);
-					}
-				}
+				SetIgnoreBetween(SeatConfig->GetVehicleOwner());				
 
 				{
 					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
@@ -331,6 +321,21 @@ namespace ArcVehiclesDebug
 			IsValid(SeatConfig->GetVehicleOwner()) ? *SeatConfig->GetVehicleOwner()->GetName() : TEXT("null"),
 			IsValid(SeatConfig->GetVehicleOwner()->GetOwner()) ? *SeatConfig->GetVehicleOwner()->GetOwner()->GetName() : TEXT("null")
 		);
+	}
+}
+
+void UArcVehiclePlayerSeatComponent::SetIgnoreBetween(AActor* OtherActor)
+{
+	UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
+	TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(OtherActor);
+	TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(GetOwner());
+
+	for (UPrimitiveComponent* VC : VehicleComponents)
+	{
+		for (UPrimitiveComponent* SC : OwnerPawnComponents)
+		{
+			EngSub->IgnoreBetween(VC, SC);
+		}
 	}
 }
 
