@@ -33,7 +33,7 @@ void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME(UArcVehiclePlayerSeatComponent, StoredPlayerState);
+	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, StoredPlayerState, COND_None, REPNOTIFY_Always);
 }
 
 // Called when the game starts
@@ -129,6 +129,11 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 		InPreviousSeatConfig->PlayerInSeat = nullptr;
 		InPreviousSeatConfig->PlayerSeatComponent = nullptr;
 	}
+}
+
+void UArcVehiclePlayerSeatComponent::OnRep_StoredPlayerState(APlayerState* InPreviousPlayerState)
+{
+	BP_OnRep_StoredPlayerState(InPreviousPlayerState);
 }
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)

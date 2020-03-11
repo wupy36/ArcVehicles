@@ -38,13 +38,19 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle")
 		UArcVehicleSeatConfig* PreviousSeatConfig;
 
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", Replicated)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", ReplicatedUsing = OnRep_StoredPlayerState)
 		APlayerState* StoredPlayerState;
 
 	FArcVehicleScopedRelativeTransformRestoration RelativeTransformRestorer;
 
 	UFUNCTION()
 		virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
+
+	UFUNCTION()
+	virtual void OnRep_StoredPlayerState(APlayerState* InPreviousPlayerState);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BP_OnRep_StoredPlayerState(APlayerState* InPreviousPlayerState);
 
 	UFUNCTION(BlueprintNativeEvent)
 		void OnSeatChangeEvent(EArcVehicleSeatChangeType SeatChangeType);
