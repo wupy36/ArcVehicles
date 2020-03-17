@@ -129,4 +129,36 @@ private:
 
 protected:
 	virtual void UpdatePysicsIgnores();
+
+
+public:
+	static void OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const class FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos);
+
+
+	/**
+	* Draw important variables on canvas.
+	*
+	* @param Canvas - Canvas to draw on
+	* @param DebugDisplay - Contains information about what debug data to display
+	* @param YL - Height of the current font
+	* @param YPos - Y position on Canvas. YPos += YL, gives position to draw text for next debug line.
+	*/
+	virtual void DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos);
+
+	virtual void GenerateDebugStrings(TArray<FString>& OutStrings);
+
+	/** Ask the server to send ability system debug information back to the client, via ClientPrintDebug_Response  */
+	UFUNCTION(Server, reliable, WithValidation)
+		void ServerPrintDebug_Request();
+	void ServerPrintDebug_Request_Implementation();
+	bool ServerPrintDebug_Request_Validate();
+
+	virtual bool ShouldRequestDebugStrings() const;
+
+	UPROPERTY(ReplicatedUsing = OnRep_ServerDebugStrings)
+		TArray<FString> ServerDebugStrings;
+
+	UFUNCTION()
+		void OnRep_ServerDebugStrings();
+
 };

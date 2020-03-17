@@ -64,6 +64,8 @@ void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 	//DOREPLIFETIME(AArcBaseVehicle, DriverSeatConfig);
 	//DOREPLIFETIME(AArcBaseVehicle, AdditionalSeatConfigs);
 	DOREPLIFETIME(AArcBaseVehicle, ReplicatedSeatConfigs);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(AArcBaseVehicle, ServerDebugStrings, COND_None, REPNOTIFY_Always);
 }
 
 bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
@@ -592,5 +594,252 @@ void AArcBaseVehicle::UpdatePysicsIgnores()
 			SeatConfig->PlayerSeatComponent->SetIgnoreBetween(this);
 		}
 	}
+}
+
+//Debug Stuff
+
+#include "GameFramework/HUD.h"
+#include "Engine/Canvas.h"
+#include "DisplayDebugHelpers.h"
+
+namespace ArcVehicleBaseDebug
+{
+	struct FDebugTargetInfo
+	{
+		FDebugTargetInfo()
+		{
+
+		}
+
+		TWeakObjectPtr<UWorld> TargetWorld;
+		TWeakObjectPtr<AArcBaseVehicle> LastDebugTarget;
+	};
+
+	TArray<FDebugTargetInfo> InventoryDebugInfoList;
+
+	FDebugTargetInfo* GetDebugTargetInfo(UWorld* World)
+	{
+		FDebugTargetInfo* TargetInfo = nullptr;
+		for (FDebugTargetInfo& Info : InventoryDebugInfoList)
+		{
+			if (Info.TargetWorld.Get() == World)
+			{
+				TargetInfo = &Info;
+				break;
+			}
+		}
+		if (TargetInfo == nullptr)
+		{
+			TargetInfo = &InventoryDebugInfoList[InventoryDebugInfoList.AddDefaulted()];
+			TargetInfo->TargetWorld = World;
+		}
+
+		return TargetInfo;
+	}
+
+	AArcBaseVehicle* GetDebugTarget(FDebugTargetInfo* TargetInfo)
+	{
+		//Return the Target if we have one
+		if (AArcBaseVehicle* Inv = TargetInfo->LastDebugTarget.Get())
+		{
+			return Inv;
+		}
+
+		//Find one
+		for (TObjectIterator<AArcBaseVehicle> It; It; ++It)
+		{
+			if (AArcBaseVehicle* Vehicle = *It)
+			{
+				if (Vehicle->GetWorld() == TargetInfo->TargetWorld.Get() && MakeWeakObjectPtr(Vehicle).Get())
+				{
+					TargetInfo->LastDebugTarget = Vehicle;
+
+					//Default to local player					
+					if (Vehicle->IsLocallyControlled())
+					{
+						break;
+					}					
+				}
+			}
+		}
+		return TargetInfo->LastDebugTarget.Get();
+	}
+
+	FString PrintDebugSeatInfo(UArcVehicleSeatConfig* SeatConfig)
+	{
+		if (!IsValid(SeatConfig))
+		{
+			return TEXT("null");
+		}
+
+		return FString::Printf(TEXT("Seat (%s) Owner(%s), IsDriver(%s) PlayerInSeat (%s), PlayerCompInSeat (%s) Vehicle (%s) VehicleOwner (%s)"),
+			*SeatConfig->GetClass()->GetAuthoredName(),
+			*SeatConfig->GetVehicleOwner()->GetName(),
+			(SeatConfig->GetVehicleOwner()->GetDriverSeat() == SeatConfig) ? TEXT("true") : TEXT("false"),
+			IsValid(SeatConfig->PlayerInSeat) ? *SeatConfig->PlayerInSeat->GetPlayerName() : TEXT("null"),
+			IsValid(SeatConfig->PlayerSeatComponent) ? *SeatConfig->PlayerSeatComponent->GetName() : TEXT("null"),
+			IsValid(SeatConfig->GetVehicleOwner()) ? *SeatConfig->GetVehicleOwner()->GetName() : TEXT("null"),
+			IsValid(SeatConfig->GetVehicleOwner()->GetOwner()) ? *SeatConfig->GetVehicleOwner()->GetOwner()->GetName() : TEXT("null")
+		);
+	}
+
+	void CycleDebugTarget(FDebugTargetInfo* TargetInfo, bool Next)
+	{
+		GetDebugTarget(TargetInfo);
+
+		// Build a list	of ASCs
+		TArray<AArcBaseVehicle*> List;
+		for (TObjectIterator<AArcBaseVehicle> It; It; ++It)
+		{
+			if (AArcBaseVehicle* SeatComp = *It)
+			{
+				if (SeatComp->GetWorld() == TargetInfo->TargetWorld.Get())
+				{
+					List.Add(SeatComp);
+				}
+			}
+		}
+
+		if (List.Num() == 0)
+		{
+			return;
+		}
+
+		// Search through list to find prev/next target
+		AArcBaseVehicle* Previous = nullptr;
+		for (int32 idx = 0; idx < List.Num() + 1; ++idx)
+		{
+			AArcBaseVehicle* SeatComp = List[idx % List.Num()];
+
+			if (Next && Previous == TargetInfo->LastDebugTarget.Get())
+			{
+				TargetInfo->LastDebugTarget = SeatComp;
+				return;
+			}
+			if (!Next && SeatComp == TargetInfo->LastDebugTarget.Get())
+			{
+				TargetInfo->LastDebugTarget = Previous;
+				return;
+			}
+
+			Previous = SeatComp;
+		}
+	}
+
+	static void	VehicleCycleDebugTarget(UWorld* InWorld, bool Next)
+	{
+		CycleDebugTarget(GetDebugTargetInfo(InWorld), Next);
+	}
+
+	FAutoConsoleCommandWithWorld VehicleSeatNextDebugTargetCmd(
+		TEXT("ArcVehicle.Debug.NextTarget"),
+		TEXT("Targets next PlayerSeat in ShowDebug Vehicle"),
+		FConsoleCommandWithWorldDelegate::CreateStatic(VehicleCycleDebugTarget, true)
+	);
+
+	FAutoConsoleCommandWithWorld VehicleSeatPrevDebugTargetCmd(
+		TEXT("ArcVehicle.Debug.PrevTarget"),
+		TEXT("Targets previous PlayerSeat in ShowDebug Vehicle"),
+		FConsoleCommandWithWorldDelegate::CreateStatic(VehicleCycleDebugTarget, false)
+	);
+
+	FDelegateHandle DebugHandle = AHUD::OnShowDebugInfo.AddStatic(&AArcBaseVehicle::OnShowDebugInfo);
+}
+
+
+
+void AArcBaseVehicle::OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const class FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos)
+{
+	if (DisplayInfo.IsDisplayOn(TEXT("ArcVehicle")))
+	{
+		UWorld* World = HUD->GetWorld();
+		ArcVehicleBaseDebug::FDebugTargetInfo* TargetInfo = ArcVehicleBaseDebug::GetDebugTargetInfo(World);
+
+		if (AArcBaseVehicle* Vehicle = ArcVehicleBaseDebug::GetDebugTarget(TargetInfo))
+		{
+			TArray<FName> LocalDisplayNames;
+			LocalDisplayNames.Add(TEXT("CArcVehicle"));
+			FDebugDisplayInfo LocalDisplayInfo(LocalDisplayNames, TArray<FName>());
+
+			Vehicle->DisplayDebug(Canvas, LocalDisplayInfo, YL, YPos);
+		}
+	}
+}
+
+void AArcBaseVehicle::DisplayDebug(class UCanvas* Canvas, const class FDebugDisplayInfo& DebugDisplay, float& YL, float& YPos)
+{
+	if (DebugDisplay.IsDisplayOn(TEXT("CArcVehicle")))
+	{
+		FDisplayDebugManager& DisplayDebugManager = Canvas->DisplayDebugManager;
+		TArray<FString> ClientStrings;
+		GenerateDebugStrings(ClientStrings);
+
+		DisplayDebugManager.DrawString(TEXT("---CLIENT VEHICLE STATE---"));
+		for (const FString& String : ClientStrings)
+		{
+			DisplayDebugManager.DrawString(String, 15);
+		}
+
+		DisplayDebugManager.DrawString(TEXT("---SERVER VEHICLE STATE---"));
+		for (const FString& String : ServerDebugStrings)
+		{
+			DisplayDebugManager.DrawString(String, 15);
+		}
+
+		//Ask for the server strings.  This is very chatty, but it's debug.
+		if (GetLocalRole() != ROLE_Authority && ShouldRequestDebugStrings())
+		{
+			ServerPrintDebug_Request();
+		}
+
+	}
+}
+
+void AArcBaseVehicle::GenerateDebugStrings(TArray<FString>& OutStrings)
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	for (int i = 0; i < AllSeats.Num(); i++)
+	{
+		UArcVehicleSeatConfig* SeatConfig = AllSeats[i];
+
+		OutStrings.Add(FString::Printf(TEXT("\t[%d]: %s"), i, *ArcVehicleBaseDebug::PrintDebugSeatInfo(SeatConfig)));
+		if (IsValid(SeatConfig->PlayerSeatComponent))
+		{
+			OutStrings.Add(FString::Printf(TEXT("\t\tPlayer Last SeatChange Event: %s"), *UEnum::GetValueAsString(SeatConfig->PlayerSeatComponent->DebugLastSeatChangeType)));
+		}
+	}
+}
+
+void AArcBaseVehicle::ServerPrintDebug_Request_Implementation()
+{
+	ServerDebugStrings.Empty(ServerDebugStrings.Num());
+	GenerateDebugStrings(ServerDebugStrings);
+}
+
+bool AArcBaseVehicle::ServerPrintDebug_Request_Validate()
+{
+	return true;
+}
+
+bool AArcBaseVehicle::ShouldRequestDebugStrings() const
+{
+	// This implements basic throttling so that debug strings can't be sent more than once a second to the server
+	const double MinTimeBetweenClientDebugSends = 1.f;
+	static double LastSendTime = 0.f;
+
+	double CurrentTime = FPlatformTime::Seconds();
+	bool ShouldSend = (CurrentTime - LastSendTime) > MinTimeBetweenClientDebugSends;
+	if (ShouldSend)
+	{
+		LastSendTime = CurrentTime;
+	}
+	return ShouldSend;
+}
+
+void AArcBaseVehicle::OnRep_ServerDebugStrings()
+{
+
 }
 

@@ -34,7 +34,7 @@ void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetime
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, StoredPlayerState, COND_None, REPNOTIFY_Always);
-	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, ServerDebugStrings, COND_None, REPNOTIFY_Always)
+	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, ServerDebugStrings, COND_None, REPNOTIFY_Always);
 }
 
 // Called when the game starts
@@ -261,7 +261,7 @@ void UArcVehiclePlayerSeatComponent::SetIgnoreBetween(AActor* OtherActor)
 	}
 }
 
-namespace ArcVehiclesDebug
+namespace ArcVehiclesSeatDebug
 {
 	struct FDebugTargetInfo
 	{
@@ -404,6 +404,8 @@ namespace ArcVehiclesDebug
 		TEXT("Targets previous PlayerSeat in ShowDebug VehicleSeat"),
 		FConsoleCommandWithWorldDelegate::CreateStatic(VehicleCycleDebugTarget, false)
 	);
+
+	FDelegateHandle DebugHandle = AHUD::OnShowDebugInfo.AddStatic(&UArcVehiclePlayerSeatComponent::OnShowDebugInfo);
 }
 
 void UArcVehiclePlayerSeatComponent::OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos)
@@ -411,9 +413,9 @@ void UArcVehiclePlayerSeatComponent::OnShowDebugInfo(class AHUD* HUD, class UCan
 	if (DisplayInfo.IsDisplayOn(TEXT("VehicleSeat")))
 	{
 		UWorld* World = HUD->GetWorld();
-		ArcVehiclesDebug::FDebugTargetInfo* TargetInfo = ArcVehiclesDebug::GetDebugTargetInfo(World);
+		ArcVehiclesSeatDebug::FDebugTargetInfo* TargetInfo = ArcVehiclesSeatDebug::GetDebugTargetInfo(World);
 
-		if (UArcVehiclePlayerSeatComponent* Comp = ArcVehiclesDebug::GetDebugTarget(TargetInfo))
+		if (UArcVehiclePlayerSeatComponent* Comp = ArcVehiclesSeatDebug::GetDebugTarget(TargetInfo))
 		{
 			TArray<FName> LocalDisplayNames;
 			LocalDisplayNames.Add(TEXT("CVehicleSeat"));
@@ -455,8 +457,8 @@ void UArcVehiclePlayerSeatComponent::DisplayDebug(class UCanvas* Canvas, const F
 
 void UArcVehiclePlayerSeatComponent::GenerateDebugStrings(TArray<FString>& OutStrings)
 {
-	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(SeatConfig)));
-	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesDebug::PrintDebugSeatInfo(PreviousSeatConfig)));
+	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(SeatConfig)));
+	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(PreviousSeatConfig)));
 
 	OutStrings.Add(FString::Printf(TEXT("Last Seat Change Event: %s"), *UEnum::GetValueAsString(DebugLastSeatChangeType)));
 
@@ -496,8 +498,4 @@ bool UArcVehiclePlayerSeatComponent::ShouldRequestDebugStrings() const
 	return ShouldSend;
 }
 
-namespace InventoryDebug
-{
-	FDelegateHandle DebugHandle = AHUD::OnShowDebugInfo.AddStatic(&UArcVehiclePlayerSeatComponent::OnShowDebugInfo);
-}
 
