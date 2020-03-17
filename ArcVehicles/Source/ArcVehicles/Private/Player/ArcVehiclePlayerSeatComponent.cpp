@@ -34,6 +34,7 @@ void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetime
 
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, StoredPlayerState, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, ServerDebugStrings, COND_None, REPNOTIFY_Always)
 }
 
 // Called when the game starts
@@ -135,6 +136,7 @@ void UArcVehiclePlayerSeatComponent::OnRep_StoredPlayerState(APlayerState* InPre
 {
 	BP_OnRep_StoredPlayerState(InPreviousPlayerState);
 }
+
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
 {
@@ -244,6 +246,21 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 	RelativeTransformRestorer.Restore();
 }
 
+void UArcVehiclePlayerSeatComponent::SetIgnoreBetween(AActor* OtherActor)
+{
+	UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
+	TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(OtherActor);
+	TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(GetOwner());
+
+	for (UPrimitiveComponent* VC : VehicleComponents)
+	{
+		for (UPrimitiveComponent* SC : OwnerPawnComponents)
+		{
+			EngSub->IgnoreBetween(VC, SC);
+		}
+	}
+}
+
 namespace ArcVehiclesDebug
 {
 	struct FDebugTargetInfo
@@ -327,21 +344,66 @@ namespace ArcVehiclesDebug
 			IsValid(SeatConfig->GetVehicleOwner()->GetOwner()) ? *SeatConfig->GetVehicleOwner()->GetOwner()->GetName() : TEXT("null")
 		);
 	}
-}
 
-void UArcVehiclePlayerSeatComponent::SetIgnoreBetween(AActor* OtherActor)
-{
-	UArcVehicleEngineSubsystem* EngSub = GEngine->GetEngineSubsystem<UArcVehicleEngineSubsystem>();
-	TInlineComponentArray<UPrimitiveComponent*> VehicleComponents(OtherActor);
-	TInlineComponentArray<UPrimitiveComponent*> OwnerPawnComponents(GetOwner());
-
-	for (UPrimitiveComponent* VC : VehicleComponents)
+	void CycleDebugTarget(FDebugTargetInfo* TargetInfo, bool Next)
 	{
-		for (UPrimitiveComponent* SC : OwnerPawnComponents)
+		GetDebugTarget(TargetInfo);
+
+		// Build a list	of ASCs
+		TArray<UArcVehiclePlayerSeatComponent*> List;
+		for (TObjectIterator<UArcVehiclePlayerSeatComponent> It; It; ++It)
 		{
-			EngSub->IgnoreBetween(VC, SC);
+			if (UArcVehiclePlayerSeatComponent* SeatComp = *It)
+			{
+				if (SeatComp->GetWorld() == TargetInfo->TargetWorld.Get())
+				{
+					List.Add(SeatComp);
+				}
+			}
+		}
+
+		if (List.Num() == 0)
+		{
+			return;
+		}
+
+		// Search through list to find prev/next target
+		UArcVehiclePlayerSeatComponent* Previous = nullptr;
+		for (int32 idx = 0; idx < List.Num() + 1; ++idx)
+		{
+			UArcVehiclePlayerSeatComponent* SeatComp = List[idx % List.Num()];
+
+			if (Next && Previous == TargetInfo->LastDebugTarget.Get())
+			{
+				TargetInfo->LastDebugTarget = SeatComp;
+				return;
+			}
+			if (!Next && SeatComp == TargetInfo->LastDebugTarget.Get())
+			{
+				TargetInfo->LastDebugTarget = Previous;
+				return;
+			}
+
+			Previous = SeatComp;
 		}
 	}
+
+	static void	VehicleCycleDebugTarget(UWorld* InWorld, bool Next)
+	{
+		CycleDebugTarget(GetDebugTargetInfo(InWorld), Next);
+	}
+
+	FAutoConsoleCommandWithWorld VehicleSeatNextDebugTargetCmd(
+		TEXT("ArcVehicleSeat.Debug.NextTarget"),
+		TEXT("Targets next PlayerSeat in ShowDebug VehicleSeat"),
+		FConsoleCommandWithWorldDelegate::CreateStatic(VehicleCycleDebugTarget, true)
+	);
+
+	FAutoConsoleCommandWithWorld VehicleSeatPrevDebugTargetCmd(
+		TEXT("ArcVehicleSeat.Debug.PrevTarget"),
+		TEXT("Targets previous PlayerSeat in ShowDebug VehicleSeat"),
+		FConsoleCommandWithWorldDelegate::CreateStatic(VehicleCycleDebugTarget, false)
+	);
 }
 
 void UArcVehiclePlayerSeatComponent::OnShowDebugInfo(class AHUD* HUD, class UCanvas* Canvas, const FDebugDisplayInfo& DisplayInfo, float& YL, float& YPos)
@@ -405,10 +467,8 @@ void UArcVehiclePlayerSeatComponent::GenerateDebugStrings(TArray<FString>& OutSt
 
 void UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Implementation()
 {
-	TArray<FString> ServerStrings;
-	GenerateDebugStrings(ServerStrings);
-
-	ClientPrintDebug_Response(ServerStrings);
+	ServerDebugStrings.Empty(ServerDebugStrings.Num());
+	GenerateDebugStrings(ServerDebugStrings);
 }
 
 bool UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Validate()
@@ -416,14 +476,9 @@ bool UArcVehiclePlayerSeatComponent::ServerPrintDebug_Request_Validate()
 	return true;
 }
 
-void UArcVehiclePlayerSeatComponent::ClientPrintDebug_Response_Implementation(const TArray<FString>& Strings)
+void UArcVehiclePlayerSeatComponent::OnRep_ServerDebugStrings()
 {
-	ServerDebugStrings = Strings;
-}
 
-bool UArcVehiclePlayerSeatComponent::ClientPrintDebug_Response_Validate(const TArray<FString>& Strings)
-{
-	return true;
 }
 
 bool UArcVehiclePlayerSeatComponent::ShouldRequestDebugStrings() const

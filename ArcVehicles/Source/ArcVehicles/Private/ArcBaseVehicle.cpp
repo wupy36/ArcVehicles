@@ -579,6 +579,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 	}
 }
 
+
 void AArcBaseVehicle::UpdatePysicsIgnores()
 {
 	TArray<UArcVehicleSeatConfig*> AllSeats;

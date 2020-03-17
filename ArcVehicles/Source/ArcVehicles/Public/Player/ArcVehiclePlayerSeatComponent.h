@@ -79,14 +79,13 @@ public:
 	void ServerPrintDebug_Request_Implementation();
 	bool ServerPrintDebug_Request_Validate();
 
-	UFUNCTION(Client, reliable)
-		void ClientPrintDebug_Response(const TArray<FString>& Strings);
-	void ClientPrintDebug_Response_Implementation(const TArray<FString>& Strings);
-	bool ClientPrintDebug_Response_Validate(const TArray<FString>& Strings);
-
 	virtual bool ShouldRequestDebugStrings() const;
 
+	UPROPERTY(ReplicatedUsing=OnRep_ServerDebugStrings)
 	TArray<FString> ServerDebugStrings;
+
+	UFUNCTION()
+	void OnRep_ServerDebugStrings();
 
 	EArcVehicleSeatChangeType DebugLastSeatChangeType;
 
