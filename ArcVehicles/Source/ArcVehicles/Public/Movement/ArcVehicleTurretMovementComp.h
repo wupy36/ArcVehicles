@@ -66,6 +66,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Turret Movement (Rotation Settings)")
 	bool bIgnoreRoll;
 
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadWrite, Category = "Movement")
+	USceneComponent* UpdatedPitchComponent;
+
 	/** Change in rotation per second. Set a negative value for infinite rotation rate and instant turns. */
 	UPROPERTY(Category = "Turret Movement (Rotation Settings)", EditAnywhere, BlueprintReadWrite)
 	FRotator RotationRate;
@@ -79,8 +82,9 @@ public:
 	virtual FRotator NormalizeOrIgnoreAxis(FRotator DesiredRotation) const;
 
 	void CheckForUpdatedBase();
-
 	void UpdateBasedMovement(float DeltaTime);
+
+
 
 protected:
 

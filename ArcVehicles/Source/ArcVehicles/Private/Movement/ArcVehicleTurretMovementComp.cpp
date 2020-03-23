@@ -83,7 +83,22 @@ void UArcVehicleTurretMovementComp::TickComponent(float DeltaTime, enum ELevelTi
 
 			// Set the new rotation.
 			DesiredRotation.DiagnosticCheckNaN(TEXT("UArcVehicleTurretMovementComp::TickComponent(): DesiredRotation"));
-			MoveUpdatedComponent(FVector::ZeroVector, DesiredRotation, /*bSweep*/ false);
+
+			FRotator ComponentRotation = DesiredRotation;
+
+			if (IsValid(UpdatedPitchComponent))
+			{
+				ComponentRotation.Pitch = 0;
+			}
+
+			MoveUpdatedComponent(FVector::ZeroVector, ComponentRotation, /*bSweep*/ false);
+
+			if (IsValid(UpdatedPitchComponent))
+			{
+				FRotator PitchCompPitch(DesiredRotation.Pitch, 0, 0);
+				UpdatedPitchComponent->SetRelativeRotationExact(PitchCompPitch, false);
+			}
+			
 		}		
 	}
 }
