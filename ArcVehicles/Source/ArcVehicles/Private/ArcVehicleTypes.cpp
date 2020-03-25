@@ -66,12 +66,14 @@ FArcVehicleSeatReference::FArcVehicleSeatReference(UArcVehicleSeatConfig* SeatCo
 	: Vehicle(nullptr)
 	, SeatID(INDEX_NONE)
 {
-	Vehicle = SeatConfig->GetVehicleOwner();
-	if (::IsValid(Vehicle))
+	if (::IsValid(SeatConfig))
 	{
-		SeatID = Vehicle->GetSeatIndex(SeatConfig);
+		Vehicle = SeatConfig->GetVehicleOwner();
+		if (::IsValid(Vehicle))
+		{
+			SeatID = Vehicle->GetSeatIndex(SeatConfig);
+		}
 	}
-	
 }
 
 UArcVehicleSeatConfig* FArcVehicleSeatReference::operator->()
