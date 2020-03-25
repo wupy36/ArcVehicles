@@ -133,6 +133,23 @@ UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig()
 	return GetDriverSeat();
 }
 
+UArcVehicleSeatConfig* AArcBaseVehicle::GetSeatConfig(const FArcVehicleSeatReference& SeatRef)
+{
+	if (SeatRef.Vehicle != this)
+	{
+		return nullptr;
+	}
+	if (!IsValidSeatIndex(SeatRef.SeatID))
+	{
+		return nullptr;
+	}
+
+	TArray<UArcVehicleSeatConfig*> SeatConfigs;
+	GetAllSeats(SeatConfigs);
+
+	return SeatConfigs[SeatRef.SeatID];
+}
+
 UArcVehicleSeatConfig* AArcBaseVehicle::GetDriverSeat()
 {
 	if (ReplicatedSeatConfigs.Num() > 0)
@@ -396,16 +413,16 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 		{
 			//Get the seat objects from this seat change event.  
 			//The Event contains Intents, and ToSeat and FromSeat are the actual possible situations.
-			UArcVehicleSeatConfig* ToSeat = nullptr;
-			UArcVehicleSeatConfig* FromSeat = nullptr;
+			FArcVehicleSeatReference ToSeat;
+			FArcVehicleSeatReference FromSeat;
 			if (SeatChangeEvent.FromSeat >= 0)
 			{
 				//Find the seat that the player is coming from
 				if (AllSeats.IsValidIndex(SeatChangeEvent.FromSeat))
 				{
-					FromSeat = AllSeats[SeatChangeEvent.FromSeat];
+					FromSeat = FArcVehicleSeatReference(this, SeatChangeEvent.FromSeat);
 
-					check(IsValid(FromSeat)); //Seat Must be valid (bad data?)
+					check(FromSeat.IsValid()); //Seat Must be valid (bad data?)
 					
 					//If the player isn't the player in the seat, we have a bad data situation
 					checkf(FromSeat->PlayerInSeat == SeatChangeEvent.Player, 
@@ -419,7 +436,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 					// and want to get in.
 
 					//Finding a player this way is kind of slow.  The caller should know that. 
-					FromSeat = FindSeatContainingPlayer(SeatChangeEvent.Player);
+					FromSeat = FArcVehicleSeatReference(FindSeatContainingPlayer(SeatChangeEvent.Player));
 				}
 			}
 			
@@ -427,24 +444,24 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			{
 				if (AllSeats.IsValidIndex(SeatChangeEvent.ToSeat))
 				{
-					ToSeat = AllSeats[SeatChangeEvent.ToSeat];
-					check(IsValid(ToSeat)); //Seat must be valid (bad data?)
+					ToSeat = FArcVehicleSeatReference(this, SeatChangeEvent.ToSeat);
+					check(ToSeat.IsValid()); //Seat must be valid (bad data?)
 
 					//If IsValid(ToSeat->PlayerInSeat), that means someone is in this seat
 					if (IsValid(ToSeat->PlayerInSeat) && SeatChangeEvent.bFindEmptySeatOnFail)
 					{
-						ToSeat = FindSeatContainingPlayer(nullptr);
+						ToSeat = FArcVehicleSeatReference(FindSeatContainingPlayer(nullptr));
 					}
 					else if (IsValid(ToSeat->PlayerInSeat))
 					{
 						//This is a fail to do something situation.  
 						//We need to discover the intent of this change event, then notify the player that it failed.
-						ToSeat = nullptr;
+						ToSeat = FArcVehicleSeatReference();
 					}
 				}
 				else if (SeatChangeEvent.ToSeat == FArcVehicleSeatChangeEvent::ANY_SEAT)
 				{
-					ToSeat = FindSeatContainingPlayer(nullptr);
+					ToSeat = FArcVehicleSeatReference(FindSeatContainingPlayer(nullptr));
 				}
 			}
 
@@ -498,9 +515,9 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			
 			if (bWantsASeat)
 			{
-				if (IsValid(ToSeat))
+				if (ToSeat.IsValid())
 				{
-					if (IsValid(FromSeat))
+					if (FromSeat.IsValid())
 					{
 						//remove the player from this seat.  
 						FromSeat->UnAttachPlayerFromSeat(SeatChangeEvent.Player);
@@ -550,7 +567,7 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 
 			if (bWantsOut)
 			{
-				if (IsValid(FromSeat))
+				if (FromSeat.IsValid())
 				{		
 					PlayerSeatComponent->ChangeSeats(nullptr);
 					FromSeat->PlayerInSeat = nullptr;
@@ -581,6 +598,22 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 	}
 }
 
+
+int32 AArcBaseVehicle::GetSeatIndex(UArcVehicleSeatConfig* Seat)
+{
+	TArray<UArcVehicleSeatConfig*> AllSeats;
+	GetAllSeats(AllSeats);
+
+	for (int32 i = 0; i < AllSeats.Num(); i++)
+	{
+		if (AllSeats[i] == Seat)
+		{
+			return i;
+		}
+	}
+
+	return INDEX_NONE;
+}
 
 void AArcBaseVehicle::UpdatePysicsIgnores()
 {

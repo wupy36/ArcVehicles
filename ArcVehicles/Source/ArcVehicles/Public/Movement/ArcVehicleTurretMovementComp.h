@@ -84,7 +84,9 @@ public:
 	void CheckForUpdatedBase();
 	void UpdateBasedMovement(float DeltaTime);
 
+	virtual void PerformRotationMove(FRotator DesiredRotation);
 
+		
 
 protected:
 
@@ -98,4 +100,11 @@ private:
 	/** Post-physics tick function for this character */
 	UPROPERTY()
 		struct FArcVehicleTurretMovementPostPhysicsTickFunction PostPhysicsTickFunction;
+
+public:
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ServerMove(FRotator FullRotation);
+	void Server_ServerMove_Implementation(FRotator FullRotation);
+	bool Server_ServerMove_Validate(FRotator FullRotation);
 };

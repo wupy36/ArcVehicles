@@ -84,22 +84,31 @@ void UArcVehicleTurretMovementComp::TickComponent(float DeltaTime, enum ELevelTi
 			// Set the new rotation.
 			DesiredRotation.DiagnosticCheckNaN(TEXT("UArcVehicleTurretMovementComp::TickComponent(): DesiredRotation"));
 
-			FRotator ComponentRotation = DesiredRotation;
-
-			if (IsValid(UpdatedPitchComponent))
-			{
-				ComponentRotation.Pitch = 0;
-			}
-
-			MoveUpdatedComponent(FVector::ZeroVector, ComponentRotation, /*bSweep*/ false);
-
-			if (IsValid(UpdatedPitchComponent))
-			{
-				FRotator PitchCompPitch(DesiredRotation.Pitch, 0, 0);
-				UpdatedPitchComponent->SetRelativeRotationExact(PitchCompPitch, false);
-			}
+			PerformRotationMove(DesiredRotation);		
 			
+			if (GetOwnerRole() == ROLE_SimulatedProxy)
+			{
+				Server_ServerMove(DesiredRotation);
+			}
 		}		
+	}
+}
+
+void UArcVehicleTurretMovementComp::PerformRotationMove(FRotator DesiredRotation)
+{
+	FRotator ComponentRotation = DesiredRotation;
+
+	if (IsValid(UpdatedPitchComponent))
+	{
+		ComponentRotation.Pitch = 0;
+	}
+
+	MoveUpdatedComponent(FVector::ZeroVector, ComponentRotation, /*bSweep*/ false);
+
+	if (IsValid(UpdatedPitchComponent))
+	{
+		FRotator PitchCompPitch(DesiredRotation.Pitch, 0, 0);
+		UpdatedPitchComponent->SetRelativeRotationExact(PitchCompPitch, false);
 	}
 }
 
@@ -277,6 +286,18 @@ void UArcVehicleTurretMovementComp::UpdateBasedMovement(float DeltaTime)
 		OldBaseQuat = BaseComponent->GetComponentQuat();
 		OldBaseLocation = BaseComponent->GetComponentLocation();
 	}
+}
+
+
+
+void UArcVehicleTurretMovementComp::Server_ServerMove_Implementation(FRotator FullRotation)
+{
+	PerformRotationMove(FullRotation);
+}
+
+bool UArcVehicleTurretMovementComp::Server_ServerMove_Validate(FRotator FullRotation)
+{
+	return true;
 }
 
 void FArcVehicleTurretMovementPostPhysicsTickFunction::ExecuteTick(float DeltaTime, enum ELevelTick TickType, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent)

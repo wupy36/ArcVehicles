@@ -2,6 +2,7 @@
 
 #include "ArcVehicles.h"
 #include "ArcBaseVehicle.h"
+#include "ArcVehicleTypes.h"
 #include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "ArcVehicleSeatConfig.h"
 #include "ArcVehicleEngineSubsystem.h"
@@ -32,7 +33,7 @@ void UArcVehiclePlayerSeatComponent::GetLifetimeReplicatedProps(TArray<FLifetime
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, SeatConfig, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, CurrentSeatConfig, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, StoredPlayerState, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UArcVehiclePlayerSeatComponent, ServerDebugStrings, COND_None, REPNOTIFY_Always);
 }
@@ -61,27 +62,26 @@ void UArcVehiclePlayerSeatComponent::OnRegister()
 	RelativeTransformRestorer = FArcVehicleScopedRelativeTransformRestoration(GetOwner());
 }
 
-void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
+void UArcVehiclePlayerSeatComponent::ChangeSeats(const FArcVehicleSeatReference& NewSeat)
 {
-
-	PreviousSeatConfig = SeatConfig;
-	SeatConfig = NewSeat;
+	PreviousSeatConfig = CurrentSeatConfig;
+	CurrentSeatConfig = NewSeat;
 
 	EArcVehicleSeatChangeType SeatChangeType = EArcVehicleSeatChangeType::Invalid;
 
 	//We've entered a vehicle
-	if (PreviousSeatConfig == nullptr && IsValid(SeatConfig))
+	if (!PreviousSeatConfig.IsValid() && CurrentSeatConfig.IsValid())
 	{
 		SeatChangeType = EArcVehicleSeatChangeType::EnterVehicle;
 
 	}
 	//We've swapped seats
-	if (IsValid(PreviousSeatConfig) && IsValid(SeatConfig))
+	if (PreviousSeatConfig.IsValid() && CurrentSeatConfig.IsValid())
 	{
 		SeatChangeType = EArcVehicleSeatChangeType::SwitchSeats;
 	}
 	//We've exited the vehicle
-	if (IsValid(PreviousSeatConfig) && SeatConfig == nullptr)
+	if (PreviousSeatConfig.IsValid() && !CurrentSeatConfig.IsValid())
 	{
 		SeatChangeType = EArcVehicleSeatChangeType::ExitVehicle;
 	}
@@ -92,31 +92,31 @@ void UArcVehiclePlayerSeatComponent::ChangeSeats(UArcVehicleSeatConfig* NewSeat)
 	//Inform the vehicle of this seat change event on both client and server
 
 	AArcBaseVehicle* Vehicle = nullptr;
-	if (IsValid(SeatConfig))
+	if (CurrentSeatConfig.IsValid())
 	{
-		Vehicle = SeatConfig->GetVehicleOwner();
+		Vehicle = CurrentSeatConfig->GetVehicleOwner();
 	}
-	else if (IsValid(PreviousSeatConfig))
+	else if (PreviousSeatConfig.IsValid())
 	{
 		Vehicle = PreviousSeatConfig->GetVehicleOwner();
 	}
 
 	if (IsValid(Vehicle))
 	{
-		Vehicle->NotifyPlayerSeatChangeEvent(StoredPlayerState, SeatConfig, PreviousSeatConfig, SeatChangeType);
+		Vehicle->NotifyPlayerSeatChangeEvent(StoredPlayerState, *CurrentSeatConfig, *PreviousSeatConfig, SeatChangeType);
 	}
 
 	DebugLastSeatChangeType = SeatChangeType;
 }
 
-void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig)
+void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(const FArcVehicleSeatReference& InPreviousSeatConfig)
 {
 	//So, we reverted the replication here because ChangeSeats stores the previous seat and changes SeatConfig itself.
-	UArcVehicleSeatConfig* CurrentSeat = SeatConfig;
-	SeatConfig = InPreviousSeatConfig;
+	FArcVehicleSeatReference CurrentSeat = CurrentSeatConfig;
+	CurrentSeatConfig = InPreviousSeatConfig;
 
 	//Make sure that on the client, we know the seat is ours.  This isn't replicated from the server but we can derive it so bandwidth savings.
-	if (IsValid(CurrentSeat))
+	if (CurrentSeat.IsValid())
 	{
 		CurrentSeat->PlayerSeatComponent = this;
 		CurrentSeat->PlayerInSeat = StoredPlayerState;
@@ -125,10 +125,10 @@ void UArcVehiclePlayerSeatComponent::OnRep_SeatConfig(UArcVehicleSeatConfig* InP
 	ChangeSeats(CurrentSeat);
 
 	//Clean out the player seat component on the client.  The seat change code handles this on the server
-	if (IsValid(InPreviousSeatConfig))
+	if (PreviousSeatConfig.IsValid())
 	{
-		InPreviousSeatConfig->PlayerInSeat = nullptr;
-		InPreviousSeatConfig->PlayerSeatComponent = nullptr;
+		PreviousSeatConfig->PlayerInSeat = nullptr;
+		PreviousSeatConfig->PlayerSeatComponent = nullptr;
 	}
 }
 
@@ -140,7 +140,7 @@ void UArcVehiclePlayerSeatComponent::OnRep_StoredPlayerState(APlayerState* InPre
 
 void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicleSeatChangeType SeatChangeType)
 {
-	if (IsValid(PreviousSeatConfig))
+	if (PreviousSeatConfig.IsValid())
 	{
 		PreviousSeatConfig->UnAttachPlayerFromSeat(StoredPlayerState);
 	}
@@ -149,12 +149,12 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 	{
 		if (SeatChangeType == EArcVehicleSeatChangeType::EnterVehicle || SeatChangeType == EArcVehicleSeatChangeType::SwitchSeats)
 		{
-			if (IsValid(SeatConfig))
+			if (CurrentSeatConfig.IsValid())
 			{
-				SetIgnoreBetween(SeatConfig->GetVehicleOwner());				
+				SetIgnoreBetween(CurrentSeatConfig->GetVehicleOwner());
 
 				{
-					SeatConfig->AttachPlayerToSeat(StoredPlayerState);
+					CurrentSeatConfig->AttachPlayerToSeat(StoredPlayerState);
 				}
 
 				if (ACharacter* OwnerChar = Cast<ACharacter>(OwnerPawn))
@@ -196,7 +196,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 			if (GetOwnerRole() == ROLE_Authority)
 			{
 				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
-				if (IsValid(PreviousSeatConfig))
+				if (PreviousSeatConfig.IsValid())
 				{
 					TArray<FTransform> ExitLocations;
 					PreviousSeatConfig->GetVehicleOwner()->GetSortedExitPoints(GetOwner()->GetActorTransform(), ExitLocations);
@@ -457,8 +457,8 @@ void UArcVehiclePlayerSeatComponent::DisplayDebug(class UCanvas* Canvas, const F
 
 void UArcVehiclePlayerSeatComponent::GenerateDebugStrings(TArray<FString>& OutStrings)
 {
-	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(SeatConfig)));
-	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(PreviousSeatConfig)));
+	OutStrings.Add(FString::Printf(TEXT("Current Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(*CurrentSeatConfig)));
+	OutStrings.Add(FString::Printf(TEXT("Previous Seat: %s"), *ArcVehiclesSeatDebug::PrintDebugSeatInfo(*PreviousSeatConfig)));
 
 	OutStrings.Add(FString::Printf(TEXT("Last Seat Change Event: %s"), *UEnum::GetValueAsString(DebugLastSeatChangeType)));
 

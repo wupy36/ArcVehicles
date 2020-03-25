@@ -30,13 +30,15 @@ protected:
 public:
 	virtual void OnRegister() override;
 
-	virtual void ChangeSeats(UArcVehicleSeatConfig* NewSeat);
+	virtual void ChangeSeats(const FArcVehicleSeatReference& NewSeat);
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", ReplicatedUsing = OnRep_SeatConfig)
-		UArcVehicleSeatConfig* SeatConfig;
+	FArcVehicleSeatReference CurrentSeatConfig;
+	//	UArcVehicleSeatConfig* SeatConfig;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle")
-		UArcVehicleSeatConfig* PreviousSeatConfig;
+	FArcVehicleSeatReference PreviousSeatConfig;
+	//	UArcVehicleSeatConfig* PreviousSeatConfig;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Vehicle", ReplicatedUsing = OnRep_StoredPlayerState)
 		APlayerState* StoredPlayerState;
@@ -44,7 +46,7 @@ public:
 	FArcVehicleScopedRelativeTransformRestoration RelativeTransformRestorer;
 
 	UFUNCTION()
-		virtual void OnRep_SeatConfig(UArcVehicleSeatConfig* InPreviousSeatConfig);
+		virtual void OnRep_SeatConfig(const FArcVehicleSeatReference& InPreviousSeatConfig);
 
 	UFUNCTION()
 	virtual void OnRep_StoredPlayerState(APlayerState* InPreviousPlayerState);

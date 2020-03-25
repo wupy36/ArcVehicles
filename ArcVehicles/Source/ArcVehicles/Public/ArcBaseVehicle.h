@@ -35,6 +35,8 @@ class ARCVEHICLES_API AArcBaseVehicle : public AArcVehiclePawn
 	GENERATED_BODY()
 
 public:
+	friend struct FArcVehicleSeatReference;
+
 	// Sets default values for this pawn's properties
 	AArcBaseVehicle();
 
@@ -95,6 +97,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "ArcVehicles|Vehicle")
 	bool IsValidSeatIndex(int32 InSeatIndex) const;
 
+	UArcVehicleSeatConfig* GetSeatConfig(const FArcVehicleSeatReference& SeatRef);
+	FArcVehicleSeatReference GetSeatReference(UArcVehicleSeatConfig* SeatConfig);
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "ArcVehicles|Vehicle")
 	FTransform GetNearestExitTransform(FTransform InputLocation);
 	virtual FTransform GetNearestExitTransform_Implementation(FTransform InputLocation);
@@ -126,6 +131,8 @@ private:
 		
 	UPROPERTY()
 	TArray<FArcVehicleSeatChangeEvent> SeatChangeQueue;
+
+	int32 GetSeatIndex(UArcVehicleSeatConfig* Seat);
 
 protected:
 	virtual void UpdatePysicsIgnores();
