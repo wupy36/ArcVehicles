@@ -182,13 +182,6 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 				OwnerChar->GetCharacterMovement()->StopMovementImmediately();
 				OwnerChar->GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 				OwnerChar->GetCharacterMovement()->SetComponentTickEnabled(true);
-				if (GetOwnerRole() == ROLE_Authority)
-				{
-					OwnerChar->GetCharacterMovement()->FlushServerMoves();
-					OwnerChar->GetCharacterMovement()->ForceReplicationUpdate();
-					OwnerChar->GetCharacterMovement()->ForceClientAdjustment();
-					OwnerChar->ForceNetUpdate();
-				}
 			}
 
 
