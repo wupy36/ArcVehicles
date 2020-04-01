@@ -186,7 +186,7 @@ void UArcVehiclePlayerSeatComponent::OnSeatChangeEvent_Implementation(EArcVehicl
 
 
 			//Find them an exit point.  This has to be done after we re-enable movement otherwise we don't get teleported
-			if (GetOwnerRole() == ROLE_Authority)
+			//if (GetOwnerRole() == ROLE_Authority)
 			{
 				FVector ExitLoc = GetOwner()->GetActorLocation() + FVector(0, 0, 300);
 				if (PreviousSeatConfig.IsValid())
