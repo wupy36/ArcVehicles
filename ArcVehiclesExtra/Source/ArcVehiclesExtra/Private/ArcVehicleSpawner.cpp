@@ -9,18 +9,18 @@
 AArcVehicleSpawner::AArcVehicleSpawner()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 
 #if WITH_EDITOR
-	EditorVehicleMesh = CreateEditorOnlyDefaultSubobject<USkeletalMeshComponent>("Editor Mesh");
+	EditorVehicleMesh = CreateEditorOnlyDefaultSubobject<UChildActorComponent>("EditorChildActor");
 	if (IsValid(EditorVehicleMesh))
 	{
 		EditorVehicleMesh->SetupAttachment(RootComponent);
 		EditorVehicleMesh->bIsEditorOnly = true;
-		EditorVehicleMesh->bHiddenInGame = true;
-		EditorVehicleMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		EditorVehicleMesh->SetHiddenInGame(true);
+		EditorVehicleMesh->SetVisibility(true);
 	}
 #endif
 }
@@ -29,7 +29,10 @@ AArcVehicleSpawner::AArcVehicleSpawner()
 void AArcVehicleSpawner::BeginPlay()
 {
 	Super::BeginPlay();
-	
+#if WITH_EDITOR	
+	EditorVehicleMesh->DestroyChildActor();
+#endif
+
 	if (bSpawnImmediately)
 	{
 		SpawnVehicle();
@@ -99,23 +102,7 @@ void AArcVehicleSpawner::PostEditChangeProperty(FPropertyChangedEvent& PropertyC
 {
 	if (PropertyChangedEvent.Property && PropertyChangedEvent.Property->GetFName() == GET_MEMBER_NAME_CHECKED(AArcVehicleSpawner, VehicleClass) && IsValid(VehicleClass))
 	{
-		USkeletalMeshComponent* ASkeletalMeshComp = nullptr;
-
-		UBlueprintGeneratedClass* BPClass = Cast<UBlueprintGeneratedClass>(VehicleClass.Get());
-		const TArray<USCS_Node*>& Nodes = BPClass->SimpleConstructionScript->GetAllNodes();
-		for (auto Node : Nodes)
-		{
-			if (USkeletalMeshComponent* SKMesh = Cast<USkeletalMeshComponent>(Node->ComponentTemplate))
-			{				
-				ASkeletalMeshComp = SKMesh;		
-				break;
-			}
-		}
-		
-		if (IsValid(ASkeletalMeshComp) && IsValid(EditorVehicleMesh))
-		{
-			EditorVehicleMesh->SetSkeletalMesh(ASkeletalMeshComp->SkeletalMesh);
-		}
+		EditorVehicleMesh->SetChildActorClass(VehicleClass);
 	}
 }
 #endif

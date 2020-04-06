@@ -13,7 +13,8 @@ class ARCVEHICLESEXTRA_API AArcVehicleSpawner : public AActor
 {
 	GENERATED_BODY()
 
-	USkeletalMeshComponent* EditorVehicleMesh;
+		UPROPERTY()
+	UChildActorComponent* EditorVehicleMesh;
 
 public:	
 	// Sets default values for this actor's properties
