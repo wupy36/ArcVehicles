@@ -135,7 +135,7 @@ private:
 	int32 GetSeatIndex(UArcVehicleSeatConfig* Seat);
 
 protected:
-	virtual void UpdatePysicsIgnores();
+	virtual void UpdatePhysicsIgnores();
 
 
 public:

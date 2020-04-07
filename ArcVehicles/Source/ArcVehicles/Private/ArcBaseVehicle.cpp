@@ -86,7 +86,7 @@ bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FO
 void AArcBaseVehicle::PostNetReceivePhysicState()
 {
 	//Ensure that the seat ignores are set up.
-	UpdatePysicsIgnores();
+	UpdatePhysicsIgnores();
 
 	Super::PostNetReceivePhysicState();
 }
@@ -615,14 +615,14 @@ int32 AArcBaseVehicle::GetSeatIndex(UArcVehicleSeatConfig* Seat)
 	return INDEX_NONE;
 }
 
-void AArcBaseVehicle::UpdatePysicsIgnores()
+void AArcBaseVehicle::UpdatePhysicsIgnores()
 {
 	TArray<UArcVehicleSeatConfig*> AllSeats;
 	GetAllSeats(AllSeats);
 
 	for (UArcVehicleSeatConfig* SeatConfig : AllSeats)
 	{
-		if (IsValid(SeatConfig->PlayerSeatComponent))
+		if (IsValid(SeatConfig) && IsValid(SeatConfig->PlayerSeatComponent))
 		{
 			SeatConfig->PlayerSeatComponent->SetIgnoreBetween(this);
 		}
