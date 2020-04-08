@@ -13,8 +13,9 @@
 
 
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
+	: Super()
 {
-
+	this->SetIsReplicated(false);
 }
 
 void UArcVehicleSeatConfig::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
@@ -115,21 +116,6 @@ FTransform UArcVehicleSeatConfig::GetSawnAttachTrasnform_Relative()
 bool UArcVehicleSeatConfig::IsDriverSeat() const
 {
 	return GetVehicleOwner()->GetDriverSeat() == this;
-}
-
-bool UArcVehicleSeatConfig::IsNameStableForNetworking() const
-{
-	return bNetAddressable || Super::IsNameStableForNetworking();
-}
-
-bool UArcVehicleSeatConfig::IsSupportedForNetworking() const
-{
-	return true;
-}
-
-void UArcVehicleSeatConfig::SetNetAddressable(bool bNewNetAddressable)
-{
-	bNetAddressable = bNewNetAddressable;
 }
 
 void UArcVehicleSeatConfig_PlayerAttachment::AttachPlayerToSeat(APlayerState* Player)

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/ActorComponent.h"
 #include "UObject/NoExportTypes.h"
 #include "ArcVehicleTypes.h"
 #include "ArcVehicleSeatConfig.generated.h"
@@ -14,7 +15,7 @@ class AArcVehiclePawn;
  *
  */
 UCLASS(EditInlineNew, Abstract, Blueprintable, BlueprintType)
-class ARCVEHICLES_API UArcVehicleSeatConfig : public UObject
+class ARCVEHICLES_API UArcVehicleSeatConfig : public UActorComponent
 {
 	GENERATED_BODY()
 public:
@@ -68,11 +69,6 @@ public:
 	UFUNCTION(BlueprintPure)
 		bool IsDriverSeat() const;
 
-	virtual bool IsNameStableForNetworking() const override;
-	virtual bool IsSupportedForNetworking() const override;
-	virtual void SetNetAddressable(bool bNewNetAddressable);
-
-	bool bNetAddressable;
 };
 
 UCLASS()

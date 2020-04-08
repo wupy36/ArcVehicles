@@ -8,8 +8,13 @@
 #include "Player/ArcVehiclePlayerSeatComponent.h"
 #include "Player/ArcVehiclePlayerStateComponent.h"
 #include "ArcVehicleDeveloperSettings.h"
+
 #include "Net/UnrealNetwork.h"
-#include "Engine/ActorChannel.h"
+#include "Engine/ActorChannel.h" 
+#include "Engine/NetDriver.h"
+#include "Engine/NetConnection.h"
+#include "Net/RepLayout.h"
+
 #include "ArcVehicleExitPoint.h"
 
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
@@ -26,11 +31,13 @@ AArcBaseVehicle::AArcBaseVehicle()
 
 void AArcBaseVehicle::PostInitProperties()
 {
-	Super::PostInitProperties();
+	Super::PostInitProperties();	
+}
 
-	
+void AArcBaseVehicle::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
 
-	
 	//HACKHACK: Due to oddities in how Unreal Engine replicates instanced subobjects
 	//we duplicate them here.  The replicated array then syncs the objects safely to the client
 	//if (!IsNetMode(NM_Standalone))
@@ -42,20 +49,21 @@ void AArcBaseVehicle::PostInitProperties()
 			UArcVehicleSeatConfig* DupSeatConfig = DuplicateObject(DriverSeatConfig, this);
 			if (IsValid(DupSeatConfig))
 			{
-				DupSeatConfig->SetNetAddressable(true);
+				DupSeatConfig->SetIsReplicated(true);
+				DupSeatConfig->RegisterComponent();
 				ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
 			}
 
 			for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
 			{
 				DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
-				DupSeatConfig->SetNetAddressable(true);
+				DupSeatConfig->SetIsReplicated(true);
+				DupSeatConfig->RegisterComponent();
 
 				ReplicatedSeatConfigs.Add(DupSeatConfig);
 			}
 		}
 	}
-	
 }
 
 void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
@@ -70,8 +78,8 @@ void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 
 bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
 {
-	bool bWroteSomething = false;
-
+	bool bWroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	/*
 	TArray<UArcVehicleSeatConfig*> AllSeats;
 	GetAllSeats(AllSeats);
 
@@ -79,7 +87,7 @@ bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FO
 	{
 		bWroteSomething |= Channel->ReplicateSubobject(SeatConfig, *Bunch, *RepFlags);		
 	}
-
+	*/
 	return bWroteSomething;
 }
 
