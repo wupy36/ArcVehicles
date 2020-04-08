@@ -49,6 +49,7 @@ void AArcBaseVehicle::PostInitializeComponents()
 			UArcVehicleSeatConfig* DupSeatConfig = DuplicateObject(DriverSeatConfig, this);
 			if (IsValid(DupSeatConfig))
 			{
+				DupSeatConfig->ClearFlags(RF_ArchetypeObject);
 				DupSeatConfig->SetIsReplicated(true);
 				DupSeatConfig->RegisterComponent();
 				ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
@@ -57,6 +58,7 @@ void AArcBaseVehicle::PostInitializeComponents()
 			for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
 			{
 				DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
+				DupSeatConfig->ClearFlags(RF_ArchetypeObject);
 				DupSeatConfig->SetIsReplicated(true);
 				DupSeatConfig->RegisterComponent();
 
