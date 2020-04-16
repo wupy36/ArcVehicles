@@ -65,6 +65,7 @@ public:
 	virtual FTransform GetSeatAttachTransform_World();
 	virtual FTransform GetSawnAttachTrasnform_Relative();
 
+	virtual bool IsFullNameStableForNetworking() const override;
 
 	UFUNCTION(BlueprintPure)
 		bool IsDriverSeat() const;

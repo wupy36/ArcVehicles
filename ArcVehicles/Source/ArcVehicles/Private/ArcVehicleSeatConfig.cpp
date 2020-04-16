@@ -114,6 +114,11 @@ FTransform UArcVehicleSeatConfig::GetSawnAttachTrasnform_Relative()
 	}
 }
 
+bool UArcVehicleSeatConfig::IsFullNameStableForNetworking() const
+{
+	return Super::IsFullNameStableForNetworking();
+}
+
 bool UArcVehicleSeatConfig::IsDriverSeat() const
 {
 	return GetVehicleOwner()->GetDriverSeat() == this;
