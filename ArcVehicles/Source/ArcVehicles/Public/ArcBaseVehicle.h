@@ -117,11 +117,11 @@ public:
 
 	//Seat Configuration for the driver.  This object is always valid and must exist for the vehicle to be driveable
 	//
-	UPROPERTY(EditAnywhere, Category="Config", Instanced)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Vehicle Config", Instanced)
 	UArcVehicleSeatConfig* DriverSeatConfig;
 
 	//Additional Seat Configurations for this vehicle
-	UPROPERTY(EditAnywhere, Category = "Config", Instanced)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Vehicle Config", Instanced)
 	TArray<UArcVehicleSeatConfig*> AdditionalSeatConfigs;
 
 	UPROPERTY(Replicated, Transient)

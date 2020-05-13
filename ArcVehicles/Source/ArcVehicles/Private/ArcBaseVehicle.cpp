@@ -50,18 +50,13 @@ void AArcBaseVehicle::PostInitializeComponents()
 			if (IsValid(DupSeatConfig))
 			{
 				DupSeatConfig->ClearFlags(RF_ArchetypeObject | RF_WasLoaded);
-				DupSeatConfig->SetIsReplicated(true);
-				DupSeatConfig->RegisterComponent();
 				ReplicatedSeatConfigs.Insert(DupSeatConfig, 0);
 			}
 
 			for (int32 i = 0; i < AdditionalSeatConfigs.Num(); i++)
 			{
 				DupSeatConfig = DuplicateObject(AdditionalSeatConfigs[i], this);
-				DupSeatConfig->ClearFlags(RF_ArchetypeObject | RF_WasLoaded);
-				DupSeatConfig->SetIsReplicated(true);
-				DupSeatConfig->RegisterComponent();
-
+				DupSeatConfig->ClearFlags(RF_ArchetypeObject | RF_WasLoaded);			
 				ReplicatedSeatConfigs.Add(DupSeatConfig);
 			}
 		}
@@ -81,7 +76,7 @@ void AArcBaseVehicle::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>
 bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FOutBunch *Bunch, FReplicationFlags *RepFlags)
 {
 	bool bWroteSomething = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
-	/*
+	
 	TArray<UArcVehicleSeatConfig*> AllSeats;
 	GetAllSeats(AllSeats);
 
@@ -89,7 +84,7 @@ bool AArcBaseVehicle::ReplicateSubobjects(class UActorChannel *Channel, class FO
 	{
 		bWroteSomething |= Channel->ReplicateSubobject(SeatConfig, *Bunch, *RepFlags);		
 	}
-	*/
+	
 	return bWroteSomething;
 }
 

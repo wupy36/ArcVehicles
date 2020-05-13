@@ -15,8 +15,7 @@
 UArcVehicleSeatConfig::UArcVehicleSeatConfig()
 	: Super()
 {
-	this->SetIsReplicated(false);
-	this->bAutoRegister = false;
+	
 }
 
 void UArcVehicleSeatConfig::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const
@@ -114,9 +113,9 @@ FTransform UArcVehicleSeatConfig::GetSawnAttachTrasnform_Relative()
 	}
 }
 
-bool UArcVehicleSeatConfig::IsFullNameStableForNetworking() const
+bool UArcVehicleSeatConfig::IsSupportedForNetworking() const
 {
-	return Super::IsFullNameStableForNetworking();
+	return true;
 }
 
 bool UArcVehicleSeatConfig::IsDriverSeat() const

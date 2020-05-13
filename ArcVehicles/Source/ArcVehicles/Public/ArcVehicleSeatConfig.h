@@ -15,7 +15,7 @@ class AArcVehiclePawn;
  *
  */
 UCLASS(EditInlineNew, Abstract, Blueprintable, BlueprintType)
-class ARCVEHICLES_API UArcVehicleSeatConfig : public UActorComponent
+class ARCVEHICLES_API UArcVehicleSeatConfig : public UObject
 {
 	GENERATED_BODY()
 public:
@@ -23,6 +23,7 @@ public:
 	UArcVehicleSeatConfig();
 
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty> & OutLifetimeProps) const override;
+	virtual bool IsSupportedForNetworking() const override;
 
 	//Where the seat is attached to on the parent vehicle
 	UPROPERTY(EditAnywhere, Category = "Attach", Replicated)
@@ -64,12 +65,9 @@ public:
 
 	virtual FTransform GetSeatAttachTransform_World();
 	virtual FTransform GetSawnAttachTrasnform_Relative();
-
-	virtual bool IsFullNameStableForNetworking() const override;
-
+	
 	UFUNCTION(BlueprintPure)
 		bool IsDriverSeat() const;
-
 };
 
 UCLASS()
