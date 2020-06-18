@@ -1,4 +1,4 @@
-// 2017-2020 Puny Human.  All Rights Reserved
+// Copyright 2017-2020 Puny Human, All Rights Reserved.
 
 #pragma once
 

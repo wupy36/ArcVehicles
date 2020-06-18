@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2017-2020 Puny Human, All Rights Reserved.
 
 
 #include "Player/ArcVehiclePlayerStateComponent.h"
