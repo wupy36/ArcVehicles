@@ -2,13 +2,14 @@
   "FileVersion": 3,
   "Version": 1,
   "VersionName": "1.0.2.98",
+  "EngineVersion": "4.25",
   "FriendlyName": "ArcVehicles",
   "Description": "",
   "Category": "Other",
   "CreatedBy": "Garrett Fleenor & Puny Human",
   "CreatedByURL": "https://punyhuman.com/",
   "DocsURL": "https://tracker.punyhuman.com/projects/arc_vehicle/wiki",
-  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/a255c03be657401e82d312604b410e01",
+  "MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/a255c03be657401e82d312604b410e01",
   "SupportURL": "https://tracker.punyhuman.com/projects/arc_vehicle",
   "CanContainContent": true,
   "IsBetaVersion": false,
@@ -18,7 +19,12 @@
       "Name": "ArcVehicles",
       "Type": "Runtime",
       "LoadingPhase": "Default",
-      "BlacklistPlatforms": []
+      "WhitelistPlatforms": [
+        "Win64",
+        "Win32",
+        "Mac",
+        "Linux"
+      ]
     }
   ]
 }
