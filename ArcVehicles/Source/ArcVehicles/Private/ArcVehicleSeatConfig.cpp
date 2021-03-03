@@ -28,7 +28,7 @@ void UArcVehicleSeatConfig::GetLifetimeReplicatedProps(TArray<class FLifetimePro
 
 bool UArcVehicleSeatConfig::IsOpenSeat() const
 {
-	return IsValid(PlayerInSeat);
+	return !IsValid(PlayerInSeat);
 }
 
 class AArcBaseVehicle* UArcVehicleSeatConfig::GetVehicleOwner() const
