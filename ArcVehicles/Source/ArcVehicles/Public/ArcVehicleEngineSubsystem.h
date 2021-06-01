@@ -17,8 +17,8 @@ public:
 
 	struct FIgnorePair
 	{
-		TWeakObjectPtr<USceneComponent> ObjA;
-		TWeakObjectPtr<USceneComponent> ObjB;
+		TWeakObjectPtr<UPrimitiveComponent> ObjA;
+		TWeakObjectPtr<UPrimitiveComponent> ObjB;
 	};
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -30,8 +30,8 @@ private:
 public:
 	const TArray<FIgnorePair>& GetIgnoreComponents() { return IgnoreComponents; };
 
-	bool IgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
-	bool RemoveIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
+	bool IgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB);
+	bool RemoveIgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB);
 
-	bool HasIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB);
+	bool HasIgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB);
 };

@@ -7,7 +7,7 @@
 #include "Physics/PhysicsInterfaceDeclares.h"
 
 
-#if WITH_PHYSX
+#if !WITH_CHAOS
 namespace ArcVehicles
 {
 	PxFilterFlags PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
@@ -48,7 +48,7 @@ static PxFilterFlags PhysXSimFilterShader_VehicleAttach(PxFilterObjectAttributes
 
 void UArcVehicleEngineSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
-#if WITH_PHYSX
+#if !WITH_CHAOS
 	EngineSubsystem = this;
 	GSimulationFilterShader = &PhysXSimFilterShader_VehicleAttach;
 #endif
@@ -56,8 +56,9 @@ void UArcVehicleEngineSubsystem::Initialize(FSubsystemCollectionBase& Collection
 
 }
 
-bool UArcVehicleEngineSubsystem::IgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB)
+bool UArcVehicleEngineSubsystem::IgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB)
 {
+
 	if (ObjA == ObjB)
 	{
 		return false;
@@ -70,15 +71,27 @@ bool UArcVehicleEngineSubsystem::IgnoreBetween(USceneComponent* ObjA, USceneComp
 	FIgnorePair IgnorePair;
 	IgnorePair.ObjA = ObjA;
 	IgnorePair.ObjB = ObjB;
-
+#if !WITH_CHAOS
 	ObjA->RecreatePhysicsState();
 	ObjB->RecreatePhysicsState();
+#else
+	FPhysicsActorHandle& ObjAHandle = ObjA->GetBodyInstance()->GetPhysicsActorHandle();
+	FPhysicsActorHandle& ObjBHandle = ObjB->GetBodyInstance()->GetPhysicsActorHandle();
 
-	return IgnoreComponents.Add(IgnorePair) >=0;
+	FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [] (const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
+		TMap<FPhysicsActorHandle, TArray<FPhysicsActorHandle>> Map;
+		Map.Add(A, { B });
+
+		FPhysicsInterface::AddDisabledCollisionsFor_AssumesLocked(Map);
+	});
+#endif
+
+	return IgnoreComponents.Add(IgnorePair) >= 0;
 }
 
-bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB)
+bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB)
 {
+
 	int32 removals = 0;
 	for (int i = 0; i < IgnoreComponents.Num(); i++)
 	{
@@ -93,10 +106,20 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(USceneComponent* ObjA, USce
 		}
 	}
 
+#if WITH_CHAOS
+	FPhysicsActorHandle& ObjAHandle = ObjA->GetBodyInstance()->GetPhysicsActorHandle();
+	FPhysicsActorHandle& ObjBHandle = ObjB->GetBodyInstance()->GetPhysicsActorHandle();
+
+	FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [](const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
+		TArray<FPhysicsActorHandle> Actors {A, B};
+		FPhysicsInterface::RemoveDisabledCollisionsFor_AssumesLocked(Actors);
+	});
+#endif
+
 	return removals > 0;
 }
 
-bool UArcVehicleEngineSubsystem::HasIgnoreBetween(USceneComponent* ObjA, USceneComponent* ObjB)
+bool UArcVehicleEngineSubsystem::HasIgnoreBetween(UPrimitiveComponent* ObjA, UPrimitiveComponent* ObjB)
 {
 	for (int i = 0; i < IgnoreComponents.Num(); i++)
 	{
@@ -113,7 +136,7 @@ bool UArcVehicleEngineSubsystem::HasIgnoreBetween(USceneComponent* ObjA, USceneC
 }
 
 //Taken from PHysXSupport line 133
-#if WITH_PHYSX
+#if !WITH_CHAOS
 PxFilterFlags ArcVehicles::PhysXSimFilterShader(PxFilterObjectAttributes attributes0, PxFilterData filterData0,
 	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
 	PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)

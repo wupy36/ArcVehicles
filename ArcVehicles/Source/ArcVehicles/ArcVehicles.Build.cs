@@ -15,6 +15,7 @@ public class ArcVehicles : ModuleRules
 			{
 				"Core",
                 "DeveloperSettings",
+                "PhysicsCore",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -31,15 +32,27 @@ public class ArcVehicles : ModuleRules
 			}
 			);
 
-        //Using Physx
-        PrivateDependencyModuleNames.AddRange(
-        new string[]
+        //Determine if we are using Chaos or PhysX, used for IgnoreBetween code
+		if(Target.bUseChaos)
         {
-            "PhysX",
-            "APEX",
-        });
+            PrivateDependencyModuleNames.AddRange(
+           new string[]
+           {
+                "Chaos",
+           });
+        }
+		else
+        {
+            //Using Physx
+            PrivateDependencyModuleNames.AddRange(
+            new string[]
+            {
+                "PhysX",
+                "APEX",
+            });
+        }
 
-		if (Target.Type == TargetType.Editor)
+        if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(
             new string[]
