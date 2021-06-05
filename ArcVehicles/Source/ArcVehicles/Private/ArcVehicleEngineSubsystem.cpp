@@ -75,15 +75,18 @@ bool UArcVehicleEngineSubsystem::IgnoreBetween(UPrimitiveComponent* ObjA, UPrimi
 	ObjA->RecreatePhysicsState();
 	ObjB->RecreatePhysicsState();
 #else
-	FPhysicsActorHandle& ObjAHandle = ObjA->GetBodyInstance()->GetPhysicsActorHandle();
-	FPhysicsActorHandle& ObjBHandle = ObjB->GetBodyInstance()->GetPhysicsActorHandle();
+	FPhysicsActorHandle ObjAHandle = ObjA->GetBodyInstance() != nullptr ? ObjA->GetBodyInstance()->GetPhysicsActorHandle() : nullptr;
+	FPhysicsActorHandle ObjBHandle = ObjB->GetBodyInstance() != nullptr ? ObjB->GetBodyInstance()->GetPhysicsActorHandle() : nullptr;
 
-	FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [] (const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
-		TMap<FPhysicsActorHandle, TArray<FPhysicsActorHandle>> Map;
-		Map.Add(A, { B });
+	if(ObjAHandle != nullptr && ObjBHandle != nullptr)
+	{
+		FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [](const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
+			TMap<FPhysicsActorHandle, TArray<FPhysicsActorHandle>> Map;
+			Map.Add(A, { B });
 
-		FPhysicsInterface::AddDisabledCollisionsFor_AssumesLocked(Map);
-	});
+			FPhysicsInterface::AddDisabledCollisionsFor_AssumesLocked(Map);
+			});
+	}
 #endif
 
 	return IgnoreComponents.Add(IgnorePair) >= 0;
@@ -107,13 +110,16 @@ bool UArcVehicleEngineSubsystem::RemoveIgnoreBetween(UPrimitiveComponent* ObjA, 
 	}
 
 #if WITH_CHAOS
-	FPhysicsActorHandle& ObjAHandle = ObjA->GetBodyInstance()->GetPhysicsActorHandle();
-	FPhysicsActorHandle& ObjBHandle = ObjB->GetBodyInstance()->GetPhysicsActorHandle();
+	FPhysicsActorHandle ObjAHandle = ObjA->GetBodyInstance() != nullptr ? ObjA->GetBodyInstance()->GetPhysicsActorHandle() : nullptr;
+	FPhysicsActorHandle ObjBHandle = ObjB->GetBodyInstance() != nullptr ? ObjB->GetBodyInstance()->GetPhysicsActorHandle() : nullptr;
 
-	FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [](const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
-		TArray<FPhysicsActorHandle> Actors {A, B};
-		FPhysicsInterface::RemoveDisabledCollisionsFor_AssumesLocked(Actors);
-	});
+	if (ObjAHandle != nullptr && ObjBHandle != nullptr)
+	{
+		FPhysicsInterface::ExecuteWrite(ObjAHandle, ObjBHandle, [](const FPhysicsActorHandle& A, const FPhysicsActorHandle& B) {
+			TArray<FPhysicsActorHandle> Actors{ A, B };
+			FPhysicsInterface::RemoveDisabledCollisionsFor_AssumesLocked(Actors);
+			});
+	}
 #endif
 
 	return removals > 0;

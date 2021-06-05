@@ -52,6 +52,22 @@ public class ArcVehicles : ModuleRules
             });
         }
 
+        //Determine if we have Modular Gameplay features
+        if (true)
+        {
+            PublicDefinitions.Add("ARCVEHICLES_MODULAR=1");
+            PrivateDependencyModuleNames.AddRange(
+           new string[]
+           {
+                "ModularGameplay",
+                "GameFeatures",
+           });
+        }
+        else
+        {
+            PublicDefinitions.Add("ARCVEHICLES_MODULAR=0");
+        }
+
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.AddRange(

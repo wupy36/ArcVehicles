@@ -17,6 +17,10 @@
 
 #include "ArcVehicleExitPoint.h"
 
+#if ARCVEHICLES_MODULAR
+#include "Components/GameFrameworkComponentManager.h"
+#endif
+
 int32 FArcVehicleSeatChangeEvent::NO_SEAT = INDEX_NONE;
 int32 FArcVehicleSeatChangeEvent::ANY_SEAT = INT32_MAX;
 
@@ -481,11 +485,24 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			UArcVehiclePlayerStateComponent* PlayerStateComp = SeatChangeEvent.Player->FindComponentByClass<UArcVehiclePlayerStateComponent>();
 			if (!IsValid(PlayerStateComp))
 			{
-				const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
-				TSubclassOf<UArcVehiclePlayerStateComponent> StateCompClass = Settings->PlayerStateComponentClass;
+#if ARCVEHICLES_MODULAR
+				if (UGameFrameworkComponentManager* ComponentManager = GetGameInstance()->GetSubsystem<UGameFrameworkComponentManager>())
+				{
+					ComponentManager->AddReceiver(SeatChangeEvent.Player);
+				}
 
-				PlayerStateComp = NewObject<UArcVehiclePlayerStateComponent>(SeatChangeEvent.Player, StateCompClass);
-				PlayerStateComp->RegisterComponent();
+				PlayerStateComp = SeatChangeEvent.Player->FindComponentByClass<UArcVehiclePlayerStateComponent>();
+				if (!IsValid(PlayerStateComp))
+#endif
+				{
+					
+					const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
+					TSubclassOf<UArcVehiclePlayerStateComponent> StateCompClass = Settings->PlayerStateComponentClass;
+
+					PlayerStateComp = NewObject<UArcVehiclePlayerStateComponent>(SeatChangeEvent.Player, StateCompClass);
+					PlayerStateComp->RegisterComponent();
+				}
+
 			}
 
 			check(IsValid(PlayerStateComp));
@@ -504,11 +521,22 @@ void AArcBaseVehicle::ProcessSeatChangeQueue()
 			UArcVehiclePlayerSeatComponent* PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
 			if (!IsValid(PlayerSeatComponent))
 			{
-				const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
-				TSubclassOf<UArcVehiclePlayerSeatComponent> PlayerCompClass = Settings->PlayerSeatComponentClass;
+#if ARCVEHICLES_MODULAR
+				if (UGameFrameworkComponentManager* ComponentManager = GetGameInstance()->GetSubsystem<UGameFrameworkComponentManager>())
+				{
+					ComponentManager->AddReceiver(SeatChangeEvent.Player);
+				}
+				PlayerSeatComponent = PlayerPawn->FindComponentByClass<UArcVehiclePlayerSeatComponent>();
+				
+				if (!IsValid(PlayerSeatComponent))
+#endif
+				{
+					const UArcVehicleDeveloperSettings* Settings = GetDefault<UArcVehicleDeveloperSettings>();
+					TSubclassOf<UArcVehiclePlayerSeatComponent> PlayerCompClass = Settings->PlayerSeatComponentClass;
 
-				PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn, PlayerCompClass);
-				PlayerSeatComponent->RegisterComponent();
+					PlayerSeatComponent = NewObject<UArcVehiclePlayerSeatComponent>(PlayerPawn, PlayerCompClass);
+					PlayerSeatComponent->RegisterComponent();
+				}
 			}
 
 			check(IsValid(PlayerSeatComponent));
