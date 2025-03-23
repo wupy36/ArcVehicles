@@ -1,6 +1,5 @@
 # ArcVehicles
-
-[![License](https://img.shields.io/badge/License-Custom-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE-MIT) [![License](https://img.shields.io/badge/License-APACHE-red)](LICENSE-APACHE)
 
 ## Overview
 
